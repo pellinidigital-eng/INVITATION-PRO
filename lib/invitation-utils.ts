@@ -2,7 +2,6 @@ import { defaultInvitation, EventType, Invitation, palettes, smartCopy, template
 
 const MAX_TEXT = 180;
 const MAX_LONG_TEXT = 620;
-const FALLBACK_WHATSAPP = defaultInvitation.whatsapp;
 
 export function cleanText(value: string, fallback = "", max = MAX_TEXT) {
   const compact = value.replace(/\s+/g, " ").trim();
@@ -12,7 +11,7 @@ export function cleanText(value: string, fallback = "", max = MAX_TEXT) {
 export function cleanWhatsApp(value: string) {
   const digits = value.replace(/[^\d+]/g, "").replace(/(?!^)\+/g, "");
   const normalized = digits.startsWith("+") ? digits.slice(1) : digits;
-  return normalized.length >= 8 && normalized.length <= 15 ? normalized : FALLBACK_WHATSAPP;
+  return normalized.length >= 8 && normalized.length <= 15 ? normalized : "";
 }
 
 export function safeDate(value: string) {

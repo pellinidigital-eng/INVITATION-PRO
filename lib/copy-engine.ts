@@ -153,15 +153,15 @@ export function buildInviteCopy(invitation: Invitation) {
   ].join("|"));
   const modifier = pick(styleModifiers[invitation.style.toLowerCase()] ?? styleModifiers.elegante, seed + 13);
   const mediaLine = invitation.images.length > 0
-    ? "Le immagini caricate danno alla pagina un taglio piu personale e meno da template."
-    : "La direzione visiva resta pulita, con spazio al testo e ai dettagli essenziali.";
-  const musicLine = invitation.music ? "La musica accompagna l'apertura senza trasformarla in effetto gratuito." : "L'esperienza resta rapida e silenziosa, perfetta per aprirsi da smartphone.";
+    ? "Le immagini aggiungono un tono personale senza appesantire la pagina."
+    : "Layout pulito, dettagli essenziali e lettura immediata da smartphone.";
+  const musicLine = invitation.music ? "Musica disponibile con controllo manuale." : "Esperienza silenziosa, rapida e comoda da aprire ovunque.";
   const userHint = rewriteDescription(invitation.description, pack, seed);
 
   return {
     title: pick(pack.titles, seed),
     subtitle: `${pick(pack.subtitles, seed + 1)} ${modifier}.`,
-    opening: `${pick(pack.openings, seed + 2)} ${userHint}`,
+    opening: userHint ? `${pick(pack.openings, seed + 2)} ${userHint}` : pick(pack.openings, seed + 2),
     emotional: pick(pack.emotional, seed + 3),
     detailsTitle: pick(pack.detailsTitles, seed + 4),
     rsvp: pick(pack.rsvp, seed + 5),
@@ -179,11 +179,11 @@ export function buildInviteCopy(invitation: Invitation) {
 
 function rewriteDescription(description: string, pack: EventCopyPack, seed: number) {
   const clean = description.replace(/\s+/g, " ").trim();
-  if (!clean) return pick(pack.emotional, seed + 20);
+  if (!clean) return "";
   const words = clean.split(" ").filter(Boolean);
-  if (words.length < 9) return `${pick(pack.emotional, seed + 21)} Il dettaglio scelto dagli organizzatori resta protagonista senza appesantire l'invito.`;
-  const fragment = words.slice(0, 14).join(" ");
-  return `La nota degli organizzatori suggerisce ${fragment.toLowerCase()}..., trasformata qui in un racconto piu fluido e curato.`;
+  if (words.length < 9) return pick(pack.emotional, seed + 21);
+  const fragment = words.slice(0, 12).join(" ");
+  return `${fragment.charAt(0).toUpperCase()}${fragment.slice(1)}.`;
 }
 
 function pick<T>(items: T[], seed: number) {

@@ -48,6 +48,7 @@ import { TemplateStage } from "@/components/TemplateStage";
 
 const styleOptions = Object.keys(styleRules);
 const fontOptions = ["Editorial serif", "Modern grotesk", "Classic roman", "Soft rounded"];
+const IS_TEST_MODE = true;
 const DRAFT_KEY = "invitation-creator-pro:draft:v1";
 const FILE_LIMITS = {
   images: 2 * 1024 * 1024,
@@ -68,10 +69,42 @@ export function StudioApp() {
   const previewRef = useRef<HTMLDivElement>(null);
   const generatedCopy = buildInviteCopy(active);
   const palette = palettes[active.palette as keyof typeof palettes] ?? palettes.champagne;
-  const features = planFeatures[plan];
+  const features = IS_TEST_MODE ? planFeatures.premium : planFeatures[plan];
+  const publicPlan = IS_TEST_MODE ? "premium" : plan;
   const status = invitationStatus(active);
-  const shareUrl = origin ? `${origin}/invite/${active.slug}?p=${plan}&d=${encodeURIComponent(encodeInvitation(active))}` : `/invite/${active.slug}`;
+  const shareUrl = origin ? `${origin}/invite/${active.slug}?p=${publicPlan}&d=${encodeURIComponent(encodeInvitation(active))}` : `/invite/${active.slug}`;
   const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(`Apri il mio invito digitale: ${shareUrl}`)}`;
+
+  function inviteUrl(invitation: Invitation) {
+    return origin ? `${origin}/invite/${invitation.slug}?p=${publicPlan}&d=${encodeURIComponent(encodeInvitation(invitation))}` : `/invite/${invitation.slug}`;
+  }
+
+  async function copyLink(invitation = active) {
+    try {
+      await navigator.clipboard.writeText(inviteUrl(invitation));
+      setNotice("Link invito copiato negli appunti.");
+    } catch {
+      setNotice("Copia automatica non riuscita: apri il link con Vedi invito e copialo dalla barra del browser.");
+    }
+  }
+
+  async function downloadQrFor(invitation = active) {
+    try {
+      const qrData = await QRCode.toDataURL(inviteUrl(invitation), {
+        errorCorrectionLevel: "H",
+        margin: 4,
+        width: 2400,
+        color: { dark: "#111111", light: "#ffffff" }
+      });
+      const link = document.createElement("a");
+      link.download = `${invitation.slug || "invito"}-qr-print-2400px.png`;
+      link.href = qrData;
+      link.click();
+      setNotice("QR code scaricato in alta qualita per stampa.");
+    } catch {
+      setNotice("QR non scaricato: prova a salvare l'invito e ripetere il download.");
+    }
+  }
 
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -190,7 +223,7 @@ export function StudioApp() {
       const normalized = normalizeInvitation(active);
       const invitation = {
         ...normalized,
-        id: active.id === "demo" ? crypto.randomUUID() : active.id,
+        id: active.id.startsWith("demo") ? createId() : active.id,
         slug: uniqueSlug(slugify(normalized.names), active.id),
         createdAt: active.createdAt || new Date().toISOString(),
         visits: active.visits || Math.floor(450 + Math.random() * 1800)
@@ -198,7 +231,7 @@ export function StudioApp() {
       const next = saveInvitation(invitation);
       setActive(invitation);
       setInvitations(next);
-      const qrData = await QRCode.toDataURL(`${window.location.origin}/invite/${invitation.slug}?p=${plan}&d=${encodeURIComponent(encodeInvitation(invitation))}`, {
+      const qrData = await QRCode.toDataURL(`${window.location.origin}/invite/${invitation.slug}?p=${publicPlan}&d=${encodeURIComponent(encodeInvitation(invitation))}`, {
         errorCorrectionLevel: "H",
         margin: 2,
         width: 1100,
@@ -240,7 +273,7 @@ export function StudioApp() {
   }
 
   function removeActive() {
-    if (active.id === "demo") {
+    if (active.id.startsWith("demo")) {
       setNotice("L invito demo resta disponibile come fallback. Salva un nuovo invito prima di eliminarlo.");
       return;
     }
@@ -248,6 +281,17 @@ export function StudioApp() {
     setInvitations(next);
     setActive(next[0] ?? defaultInvitation);
     setNotice("Invito eliminato. Il link senza payload ora mostra uno stato non disponibile.");
+  }
+
+  function removeInvitation(invitation: Invitation) {
+    if (invitation.id.startsWith("demo")) {
+      setNotice("Le demo restano disponibili. Salva una copia prima di eliminarle.");
+      return;
+    }
+    const next = deleteInvitation(invitation.id);
+    setInvitations(next);
+    if (active.id === invitation.id) setActive(next[0] ?? defaultInvitation);
+    setNotice(`Invito "${invitation.names}" eliminato.`);
   }
 
   async function exportPng() {
@@ -325,8 +369,8 @@ export function StudioApp() {
                   <div className="text-xs text-black/50">Premium event studio</div>
                 </div>
               </div>
-              <a className="hidden items-center gap-2 rounded-full border border-black/10 px-4 py-2 text-sm sm:inline-flex" href={shareUrl}>
-                Preview <ArrowUpRight size={15} />
+              <a className="hidden items-center gap-2 rounded-full border border-black/10 bg-white/70 px-4 py-2 text-sm font-semibold sm:inline-flex" href={shareUrl} target="_blank" rel="noreferrer">
+                Vedi invito <ArrowUpRight size={15} />
               </a>
             </nav>
             <div className="mt-6 flex w-fit rounded-full border border-black/10 bg-white p-1 shadow-inner-glow">
@@ -340,7 +384,7 @@ export function StudioApp() {
               <div className="mb-5 inline-flex rounded-full border border-black/10 bg-white/70 px-3 py-2 text-xs uppercase tracking-[.18em] shadow-inner-glow">
                 No AI, no paid API, all local logic
               </div>
-              <h1 className="font-editorial text-[4.5rem] leading-[.84] text-[#15151b] sm:text-[6.5rem]">
+              <h1 className="font-editorial text-[clamp(3.35rem,15vw,6.5rem)] leading-[.86] text-[#15151b]">
                 Inviti digitali che sembrano couture.
               </h1>
               <p className="mt-6 text-lg leading-8 text-black/68">
@@ -348,9 +392,9 @@ export function StudioApp() {
               </p>
               <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {qualitySignals.map((signal) => (
-                  <div key={signal.label} className="rounded-2xl border border-black/10 bg-white/70 p-4">
-                    <div className="text-xl font-semibold">{signal.value}</div>
-                    <div className="mt-1 text-xs text-black/52">{signal.label}</div>
+                  <div key={signal.label} className="min-h-[96px] rounded-[22px] border border-black/10 bg-white/82 p-4 shadow-inner-glow backdrop-blur-xl">
+                    <div className="text-xl font-semibold leading-none">{signal.value}</div>
+                    <div className="mt-2 text-[11px] font-medium uppercase leading-4 tracking-[.14em] text-black/48">{signal.label}</div>
                   </div>
                 ))}
               </div>
@@ -359,14 +403,17 @@ export function StudioApp() {
               <button disabled={busy === "save"} onClick={persist} className="inline-flex items-center gap-2 rounded-full bg-[#15151b] px-5 py-3 text-sm font-semibold text-white shadow-soft-xl disabled:opacity-60">
                 <Save size={17} /> {busy === "save" ? "Salvataggio" : "Salva invito"}
               </button>
-              <button onClick={() => { navigator.clipboard.writeText(shareUrl); setNotice("Link invito copiato negli appunti."); }} className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-semibold">
+              <a href={shareUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-semibold">
+                <ArrowUpRight size={17} /> Vedi invito
+              </a>
+              <button onClick={() => copyLink()} className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-semibold">
                 <Copy size={17} /> Copia link
               </button>
             </div>
           </div>
           <div ref={previewRef} className="relative flex items-center justify-center lg:min-h-[88vh]">
             <div className="absolute inset-y-8 left-8 right-8 rounded-[48px] bg-[#c9b083]/20 blur-3xl" />
-            <motion.div className="relative w-full max-w-[430px] rounded-[42px] border border-black/12 bg-[#111] p-3 shadow-soft-xl" initial={{ opacity: 0, y: 32, rotate: -1 }} animate={{ opacity: 1, y: 0, rotate: 0 }}>
+            <motion.div className="relative w-full max-w-[390px] rounded-[42px] border border-black/12 bg-[#111] p-3 shadow-soft-xl" initial={{ opacity: 0, y: 32, rotate: -1 }} animate={{ opacity: 1, y: 0, rotate: 0 }}>
               <div className="overflow-hidden rounded-[32px] bg-white">
                 <TemplateStage invitation={active} compact plan={plan} />
               </div>
@@ -421,6 +468,14 @@ export function StudioApp() {
             <FileInput label="Logo" accept="image/*" onChange={(event) => readFiles(event, "logo")} />
             <FileInput label="Video breve" accept="video/*" onChange={(event) => readFiles(event, "video")} />
             <FileInput label="Musica MP3" accept="audio/*" onChange={(event) => readFiles(event, "music")} />
+            {active.images.length > 0 && (
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {active.images.slice(0, 6).map((image, index) => (
+                  <img key={`${image.slice(0, 24)}-${index}`} className="aspect-square rounded-2xl object-cover" src={image} alt="" />
+                ))}
+              </div>
+            )}
+            {active.music && <div className="mt-3 rounded-2xl bg-black/[.04] p-3 text-xs text-black/60">Musica caricata. Sara controllabile nella pagina invito.</div>}
           </Panel>
         </aside>
 
@@ -474,6 +529,7 @@ export function StudioApp() {
         </section>
 
         <aside className="space-y-4 lg:sticky lg:top-4 lg:self-start">
+          <div id="qr-section">
           <Panel title="QR code premium" icon={<QrCode size={17} />}>
             <PremiumQrCard
               active={active}
@@ -481,7 +537,7 @@ export function StudioApp() {
               shareUrl={shareUrl}
               accent={palette.accent}
               onSave={persist}
-              onCopy={() => { navigator.clipboard.writeText(shareUrl); setNotice("Link invito copiato negli appunti."); }}
+              onCopy={() => copyLink()}
               onDownload={downloadQrPrint}
               whatsappShareUrl={whatsappShareUrl}
               busy={busy}
@@ -492,19 +548,27 @@ export function StudioApp() {
             </div>
             <div className="mt-3 rounded-2xl bg-black/[.04] p-3 text-xs leading-5 text-black/58">{notice}</div>
           </Panel>
+          </div>
 
           <Panel title="Dashboard" icon={<Smartphone size={17} />}>
-            <div className="space-y-2">
-              {invitations.slice(0, 6).map((item) => (
-                <button key={item.id + item.slug} onClick={() => { setActive(item); setNotice(`Invito "${item.names}" caricato in modifica.`); }} className="w-full rounded-2xl border border-black/10 bg-white p-3 text-left transition hover:border-black/30">
+            <div className="max-h-[520px] space-y-2 overflow-auto pr-1">
+              {invitations.map((item) => (
+                <div key={item.id + item.slug} className="rounded-2xl border border-black/10 bg-white p-3">
                   <div className="flex items-center justify-between gap-3">
-                    <div>
+                    <div className="min-w-0">
                       <div className="text-sm font-semibold">{item.names}</div>
                       <div className="text-xs capitalize text-black/50">{item.eventType.replace("-", " ")} · {item.visits} visite</div>
                     </div>
-                    <Eye size={16} />
+                    <div className="h-10 w-10 shrink-0 rounded-xl" style={{ background: palettes[item.palette as keyof typeof palettes]?.soft ?? "#eee" }} />
                   </div>
-                </button>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <a className="inline-flex items-center justify-center gap-1 rounded-xl bg-black px-2 py-2 text-xs font-semibold text-white" href={inviteUrl(item)} target="_blank" rel="noreferrer"><Eye size={13} /> Vedi</a>
+                    <button className="inline-flex items-center justify-center gap-1 rounded-xl border border-black/10 px-2 py-2 text-xs font-semibold" onClick={() => { setActive(item); setNotice(`Invito "${item.names}" caricato in modifica.`); }}><FileText size={13} /> Modifica</button>
+                    <button className="inline-flex items-center justify-center gap-1 rounded-xl border border-black/10 px-2 py-2 text-xs font-semibold" onClick={() => copyLink(item)}><Copy size={13} /> Link</button>
+                    <button className="inline-flex items-center justify-center gap-1 rounded-xl border border-black/10 px-2 py-2 text-xs font-semibold" onClick={() => downloadQrFor(item)}><QrCode size={13} /> QR</button>
+                    <button className="col-span-2 inline-flex items-center justify-center gap-1 rounded-xl border border-[#b35f42]/20 bg-[#fff4ef] px-2 py-2 text-xs font-semibold text-[#7a3926]" onClick={() => removeInvitation(item)}><Trash2 size={13} /> Elimina</button>
+                  </div>
+                </div>
               ))}
             </div>
             <button onClick={removeActive} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[#b35f42]/20 bg-[#fff4ef] px-4 py-3 text-sm font-semibold text-[#7a3926]">
@@ -568,6 +632,10 @@ function SparkIcon() {
   return <span className="text-lg">✦</span>;
 }
 
+function createId() {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `invite-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
 function PremiumQrCard({
   active,
   qr,
@@ -589,6 +657,7 @@ function PremiumQrCard({
   whatsappShareUrl: string;
   busy: string;
 }) {
+  const readableLink = readableInviteLink(shareUrl);
   return (
     <div className="overflow-hidden rounded-[24px] border border-black/10 bg-[#f8f5ee]">
       <div className="flex items-start justify-between gap-4 p-4">
@@ -613,7 +682,7 @@ function PremiumQrCard({
         </AnimatePresence>
         <div className="mt-3 rounded-2xl border border-black/10 bg-white p-3 text-xs leading-5 text-black/60">
           <div className="mb-1 flex items-center gap-2 font-medium text-black"><Link2 size={14} /> Link pubblico invito</div>
-          <span className="break-all">{shareUrl}</span>
+          <span className="break-all">{readableLink}</span>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <Action onClick={onSave} icon={<Save size={16} />} label={busy === "save" ? "Salvo" : "Salva QR"} />
@@ -626,6 +695,15 @@ function PremiumQrCard({
       </div>
     </div>
   );
+}
+
+function readableInviteLink(url: string) {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.origin}${parsed.pathname}`;
+  } catch {
+    return url.split("?")[0];
+  }
 }
 
 function MarketingAssets({

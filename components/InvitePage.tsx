@@ -11,6 +11,8 @@ import { findInvitation, isDeletedSlug, saveInvitation } from "@/lib/storage";
 import { normalizeInvitation } from "@/lib/invitation-utils";
 import { TemplateStage } from "@/components/TemplateStage";
 
+const IS_TEST_MODE = true;
+
 export function InvitePage({ slug }: { slug: string }) {
   const [invitation, setInvitation] = useState<Invitation>(defaultInvitation);
   const [qr, setQr] = useState("");
@@ -19,8 +21,10 @@ export function InvitePage({ slug }: { slug: string }) {
   const [musicOn, setMusicOn] = useState(false);
   const [plan, setPlan] = useState<ProductPlan>("premium");
   const palette = palettes[invitation.palette as keyof typeof palettes] ?? palettes.champagne;
-  const features = planFeatures[plan];
+  const features = IS_TEST_MODE ? planFeatures.premium : planFeatures[plan];
   const copy = buildInviteCopy(invitation);
+  const whatsappDigits = invitation.whatsapp.replace(/\D/g, "");
+  const whatsappUrl = whatsappDigits ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(copy.whatsapp)}` : "";
 
   useEffect(() => {
     setUrl(window.location.href);
@@ -102,19 +106,28 @@ export function InvitePage({ slug }: { slug: string }) {
             <p className="mt-5 text-lg leading-8 opacity-75">{copy.reminder}</p>
             <p className="mt-3 text-sm leading-6 opacity-65">{copy.mediaLine}</p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <a className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white" style={{ background: palette.accent }} href={`https://wa.me/${invitation.whatsapp}?text=${encodeURIComponent(copy.whatsapp)}`}>
-                <MessageCircle size={17} /> {copy.rsvp}
-              </a>
+              {whatsappUrl ? (
+                <a className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white" style={{ background: palette.accent }} href={whatsappUrl} target="_blank" rel="noreferrer">
+                  <MessageCircle size={17} /> {copy.rsvp}
+                </a>
+              ) : (
+                <span className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white/85" style={{ background: palette.accent }}>
+                  <MessageCircle size={17} /> WhatsApp RSVP non impostato
+                </span>
+              )}
               <a className="inline-flex items-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold" style={{ borderColor: `${palette.accent}55` }} href={calendarUrl} target="_blank" rel="noreferrer">
                 <CalendarPlus size={17} /> Aggiungi al calendario
               </a>
-              <button onClick={() => navigator.share?.({ title: invitation.names, url })} className="inline-flex items-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold" style={{ borderColor: `${palette.accent}55` }}>
+              <button onClick={() => {
+                if (navigator.share) navigator.share({ title: invitation.names, url });
+                else navigator.clipboard?.writeText(url);
+              }} className="inline-flex items-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold" style={{ borderColor: `${palette.accent}55` }}>
                 <Share2 size={17} /> Condividi
               </button>
             </div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 22 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="overflow-hidden rounded-[30px] border" style={{ borderColor: `${palette.accent}33`, background: `${palette.bg}cc` }}>
+          <motion.div id="qr-section" initial={{ opacity: 0, y: 22 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="overflow-hidden rounded-[30px] border" style={{ borderColor: `${palette.accent}33`, background: `${palette.bg}cc` }}>
             <div className="flex items-center justify-between">
               <div className="p-6 pb-3">
                 <p className="text-sm uppercase tracking-[.22em]" style={{ color: palette.accent }}>QR invite</p>
