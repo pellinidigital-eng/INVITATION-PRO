@@ -1,0 +1,9 @@
+{
+  "name": "Invitation Creator PRO",
+  "short_name": "Invite PRO",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbfaf7",
+  "theme_color": "#15151b",
+  "description": "Premium digital invitation studio."
+}
