@@ -28,12 +28,16 @@ export function encodeInvitation(invitation: Invitation) {
 }
 
 export function decodeInvitation(payload: string | null, fallback: Invitation = defaultInvitation) {
-  if (!payload) return fallback;
+  if (payload === null) return fallback;
   try {
     const decoded = JSON.parse(decodeURIComponent(escape(atob(payload.replace(/-/g, "+").replace(/_/g, "/"))))) as Partial<Invitation>;
+    if (!decoded || typeof decoded.names !== "string" || !decoded.names.trim()) return undefined;
+    const fields = Object.fromEntries(shareKeys.flatMap((key) =>
+      typeof decoded[key] === "string" ? [[key, decoded[key]]] : []
+    ));
     return {
       ...fallback,
-      ...decoded,
+      ...fields,
       id: fallback.id,
       slug: fallback.slug,
       images: fallback.images ?? [],
@@ -41,6 +45,6 @@ export function decodeInvitation(payload: string | null, fallback: Invitation = 
       createdAt: fallback.createdAt
     };
   } catch {
-    return fallback;
+    return undefined;
   }
 }

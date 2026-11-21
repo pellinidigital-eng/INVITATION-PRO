@@ -40,7 +40,7 @@ import {
 import { buildInviteCopy } from "@/lib/copy-engine";
 import { deleteInvitation, loadInvitations, saveInvitation, uniqueSlug } from "@/lib/storage";
 import { encodeInvitation } from "@/lib/share";
-import { cleanText, invitationStatus, normalizeInvitation } from "@/lib/invitation-utils";
+import { invitationStatus, normalizeInvitation } from "@/lib/invitation-utils";
 import { TemplateStage } from "@/components/TemplateStage";
 
 const styleOptions = Object.keys(styleRules);
@@ -353,7 +353,7 @@ export function StudioApp() {
   }
 
   return (
-    <main className="min-h-screen bg-[#fbfaf7] text-[#15151b]">
+    <main className="min-h-screen bg-[#fbfaf7] pb-24 text-[#15151b] sm:pb-0">
       <AnimatePresence>
         {busy && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-x-4 top-4 z-50 mx-auto flex max-w-sm items-center gap-3 rounded-full border border-black/10 bg-white/90 px-4 py-3 text-sm shadow-soft-xl backdrop-blur-xl">
@@ -430,6 +430,7 @@ export function StudioApp() {
           <details className="rounded-2xl border border-black/10 bg-white p-3">
             <summary className="cursor-pointer text-sm font-semibold">Foto, video e musica</summary>
           <Panel title="Carica file" icon={<Upload size={17} />}>
+            <p className="mb-3 text-sm text-black/65">Foto, video e musica sono visibili su questo dispositivo. Il link condiviso include i testi e lo stile dell’invito.</p>
             <FileInput label="Foto / immagini evento" accept="image/*" multiple onChange={(event) => readFiles(event, "images")} />
             <FileInput label="Logo" accept="image/*" onChange={(event) => readFiles(event, "logo")} />
             <FileInput label="Video breve" accept="video/*" onChange={(event) => readFiles(event, "video")} />
@@ -449,16 +450,16 @@ export function StudioApp() {
         <section className="space-y-4">
           <Panel title="Personalizzazione contenuti" icon={<FileText size={17} />}>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Nomi" value={active.names} onChange={(value) => update({ names: cleanText(value, "", 86), slug: slugify(value) })} />
-              <Field label="Luogo" value={active.place} onChange={(value) => update({ place: cleanText(value, "", 120) })} />
+              <Field label="Nomi" maxLength={86} value={active.names} onChange={(value) => update({ names: value })} />
+              <Field label="Luogo" maxLength={120} value={active.place} onChange={(value) => update({ place: value })} />
               <Field label="Data" type="date" value={active.date} onChange={(value) => update({ date: value })} />
               <Field label="Ora" type="time" value={active.time} onChange={(value) => update({ time: value })} />
-              <Field label="Dress code" value={active.dressCode} onChange={(value) => update({ dressCode: cleanText(value, "", 72) })} />
+              <Field label="Dress code" maxLength={72} value={active.dressCode} onChange={(value) => update({ dressCode: value })} />
               <Field label="WhatsApp RSVP" value={active.whatsapp} onChange={(value) => update({ whatsapp: value.replace(/[^\d+]/g, "").replace(/(?!^)\+/g, "").slice(0, 16) })} />
             </div>
             <label className="mt-3 block text-sm font-medium">
               Descrizione intelligente
-              <textarea value={active.description} maxLength={620} onChange={(event) => update({ description: cleanText(event.target.value, "", 620) })} className="mt-2 min-h-28 w-full rounded-2xl border border-black/10 bg-white p-4 leading-7 outline-none focus:border-black/40" />
+              <textarea value={active.description} maxLength={620} onChange={(event) => update({ description: event.target.value })} className="mt-2 min-h-28 w-full rounded-2xl border border-black/10 bg-white p-4 leading-7 outline-none focus:border-black/40" />
             </label>
             <label className="mt-3 block text-sm font-medium">
               La nostra storia
@@ -506,7 +507,7 @@ export function StudioApp() {
               );})}
             </div>
           </Panel>
-          <div className="space-y-2">
+          <div className="fixed inset-x-0 bottom-0 z-30 space-y-2 border-t border-black/10 bg-[#fbfaf7] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:static sm:border-0 sm:p-0">
             <button type="button" disabled={!hydrated || busy === "save"} onClick={() => persist(true)} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#15151b] px-6 text-sm font-semibold text-white disabled:opacity-60 sm:w-auto">
               <Play size={17} /> {busy === "save" ? "Generazione in corso…" : "Genera invito"}
             </button>
@@ -583,11 +584,11 @@ function Panel({ title, icon, children }: { title: string; icon: React.ReactNode
   );
 }
 
-function Field({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (value: string) => void; type?: string }) {
+function Field({ label, value, onChange, type = "text", maxLength }: { maxLength?: number; label: string; value: string; onChange: (value: string) => void; type?: string }) {
   return (
     <label className="block text-sm font-medium">
       {label}
-      <input type={type} value={value} onChange={(event) => onChange(event.target.value)} className="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none focus:border-black/40" />
+      <input type={type} maxLength={maxLength} value={value} onChange={(event) => onChange(event.target.value)} className="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-base outline-none focus:border-black/40" />
     </label>
   );
 }

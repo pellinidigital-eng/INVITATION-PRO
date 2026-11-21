@@ -48,7 +48,12 @@ export function InvitePage({ slug }: { slug: string }) {
       setUnavailable(true);
       return;
     }
-    const shared = normalizeInvitation((showEditor && found) ? found : decodeInvitation(payload, found ?? defaultInvitation));
+    const decoded = showEditor && found ? found : decodeInvitation(payload, found ?? defaultInvitation);
+    if (!decoded) {
+      setUnavailable(true);
+      return;
+    }
+    const shared = normalizeInvitation(decoded);
     const visited = { ...shared, slug, visits: (shared.visits || 0) + 1 };
     if (found && !showEditor) {
       try { saveInvitation(visited); } catch { /* The invite remains viewable when local storage is full. */ }
