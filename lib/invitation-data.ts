@@ -49,7 +49,9 @@ export type TemplateId =
   | "notte-neon"
   | "arcobaleno"
   | "buonanotte"
-  | "orsetti";
+  | "orsetti"
+  | "orsetto-tra-le-nuvole"
+  | "mongolfiera-rosa-celeste";
 
 export type Invitation = {
   id: string;
@@ -124,6 +126,14 @@ export const palettes = {
     accent: "#5d93bd",
     accent2: "#f0b15d"
   },
+  "rosa-celeste": {
+    name: "Rosa e celeste",
+    bg: "#fffaf7",
+    ink: "#252942",
+    soft: "#f8e7ee",
+    accent: "#465f88",
+    accent2: "#b46583"
+  },
   emerald: {
     name: "Emerald Garden",
     bg: "#f5f9f3",
@@ -193,6 +203,24 @@ export const additionalTemplates = [
     preview: "radial-gradient(circle at 75% 27%,#fff5cd 0 12%,transparent 13%),linear-gradient(145deg,#d6c6ee,#b9d7e8)", align: "center", radius: 40, premium: true, event: "baby-shower" },
   { id: "orsetti", name: "Orsetti e miele", description: "Cerchi morbidi nei toni miele", palette: "champagne",
     preview: "radial-gradient(circle at 20% 25%,#d8ac79 0 13%,transparent 14%),radial-gradient(circle at 80% 30%,#c89768 0 16%,#f6e0b8 17%)", align: "left", radius: 12, premium: true, event: "baby-shower" },
+  {
+    id: "orsetto-tra-le-nuvole",
+    name: "Orsetto tra le nuvole",
+    description: "Orsetto con fiocco bicolore, nuvole rosa e celesti e stelline",
+    palette: "rosa-celeste",
+    preview: "linear-gradient(145deg,#f8dce9,#fffaf7 50%,#d8edfa)",
+    artwork: { src: "/templates/orsetto-tra-le-nuvole.webp", position: "bottom" },
+    align: "center", radius: 30, premium: false, event: "baby-shower"
+  },
+  {
+    id: "mongolfiera-rosa-celeste",
+    name: "Mongolfiera rosa e celeste",
+    description: "Mongolfiera ad acquerello con nastri e fiori rosa e celesti",
+    palette: "rosa-celeste",
+    preview: "linear-gradient(145deg,#d8edfa,#fffaf7 50%,#f8dce9)",
+    artwork: { src: "/templates/mongolfiera-rosa-celeste.webp", position: "top" },
+    align: "center", radius: 30, premium: false, event: "baby-shower"
+  },
 ] as const;
 
 export const templates = [

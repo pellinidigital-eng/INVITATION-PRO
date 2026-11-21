@@ -32,6 +32,7 @@ export function TemplateStage({ invitation, compact = false, plan = "premium", s
   const copy = buildInviteCopy(invitation);
   const template = templates.find((item) => item.id === invitation.template) ?? templates[0];
   const extra = additionalTemplates.find((item) => item.id === invitation.template);
+  const artwork = extra && "artwork" in extra ? extra.artwork : undefined;
   const templateStyle = extra
     ? { align: extra.align === "center" ? "items-center text-center" : "items-start text-left", frame: "max-w-3xl", radius: "", rule: true }
     : templateStyles[invitation.template as keyof typeof templateStyles] ?? templateStyles.lumiere;
@@ -56,6 +57,15 @@ export function TemplateStage({ invitation, compact = false, plan = "premium", s
   const dark = palette.bg === "#101114";
   const surface = dark ? "rgba(16,17,20,.74)" : "rgba(255,255,255,.72)";
   const softSurface = dark ? "rgba(255,255,255,.08)" : "rgba(255,255,255,.68)";
+  const illustration = artwork && (
+    <div className="relative mx-auto aspect-[5/3] w-full max-w-lg overflow-hidden rounded-[24px]">
+      <img
+        src={artwork.src}
+        alt=""
+        className={`absolute left-0 h-auto w-full ${artwork.position === "top" ? "top-0" : "bottom-0"}`}
+      />
+    </div>
+  );
 
   return (
     <section
@@ -72,6 +82,7 @@ export function TemplateStage({ invitation, compact = false, plan = "premium", s
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, ease: "easeOut" }}
         >
+          {artwork?.position === "top" && <div className="mb-4 w-full">{illustration}</div>}
           <div
             className={`w-full border ${templateStyle.radius} ${compact ? "px-5 py-7" : "px-5 py-8 sm:px-10 sm:py-11"} shadow-[0_24px_80px_rgba(15,20,30,.12)] backdrop-blur-xl`}
             style={{ background: surface, borderRadius: extra?.radius, borderColor: `${palette.accent}30` }}
@@ -140,6 +151,7 @@ export function TemplateStage({ invitation, compact = false, plan = "premium", s
             <InfoCard compact={compact} icon={<MapPin size={17} />} label="Dove" value={invitation.place || "Location da definire"} palette={palette} />
             <InfoCard compact={compact} icon={<Shirt size={17} />} label="Dress code" value={invitation.dressCode || "Elegante ma comodo"} palette={palette} />
           </div>
+          {artwork?.position === "bottom" && <div className="mt-4 w-full">{illustration}</div>}
         </motion.div>
       </div>
 
