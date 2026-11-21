@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { CalendarPlus, Download, MessageCircle, QrCode, Share2, Volume2 } from "lucide-react";
 import { buildInviteCopy } from "@/lib/copy-engine";
 import { defaultInvitation, Invitation, palettes, planFeatures, ProductPlan } from "@/lib/invitation-data";
 import { decodeInvitation } from "@/lib/share";
 import { findInvitation, isDeletedSlug, saveInvitation } from "@/lib/storage";
 import { normalizeInvitation } from "@/lib/invitation-utils";
+import { InvitationOpening } from "@/components/InvitationOpening";
 import { TemplateStage } from "@/components/TemplateStage";
 
 const IS_TEST_MODE = true;
@@ -16,6 +17,8 @@ const IS_TEST_MODE = true;
 export function InvitePage({ slug }: { slug: string }) {
   const [invitation, setInvitation] = useState<Invitation>(defaultInvitation);
   const [qr, setQr] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [opened, setOpened] = useState(false);
   const [unavailable, setUnavailable] = useState(false);
   const [url, setUrl] = useState("");
   const [musicOn, setMusicOn] = useState(false);
@@ -28,6 +31,8 @@ export function InvitePage({ slug }: { slug: string }) {
 
   useEffect(() => {
     setUrl(window.location.href);
+    setOpened(false);
+    setLoading(false);
     const found = findInvitation(slug);
     const payload = new URLSearchParams(window.location.search).get("d");
     const planParam = new URLSearchParams(window.location.search).get("p");
@@ -38,7 +43,9 @@ export function InvitePage({ slug }: { slug: string }) {
     }
     const shared = normalizeInvitation(decodeInvitation(payload, found ?? defaultInvitation));
     const visited = { ...shared, slug, visits: (shared.visits || 0) + 1 };
-    saveInvitation(visited);
+    if (found) {
+      try { saveInvitation(visited); } catch { /* The invite remains viewable when local storage is full. */ }
+    }
     setInvitation(visited);
     setUnavailable(false);
   }, [slug]);
@@ -46,7 +53,7 @@ export function InvitePage({ slug }: { slug: string }) {
   useEffect(() => {
     if (!url) return;
     QRCode.toDataURL(url, {
-      errorCorrectionLevel: "H",
+      errorCorrectionLevel: "M",
       margin: 2,
       width: 1100,
       color: { dark: palette.ink, light: "#ffffff" }
@@ -66,7 +73,7 @@ export function InvitePage({ slug }: { slug: string }) {
     if (!url) return;
     if (!features.qrDownload) return;
     const printQr = await QRCode.toDataURL(url, {
-      errorCorrectionLevel: "H",
+      errorCorrectionLevel: "M",
       margin: 4,
       width: 2400,
       color: { dark: "#111111", light: "#ffffff" }
@@ -76,6 +83,9 @@ export function InvitePage({ slug }: { slug: string }) {
     link.download = `${invitation.slug}-qr-print-2400px.png`;
     link.click();
   }
+
+  if (loading) return <main className="min-h-screen" aria-busy="true" style={{ background: palette.bg }} />;
+  const hasOpening = invitation.opening && invitation.opening !== "direct";
 
   return (
     <main className="min-h-screen" style={{ background: palette.bg, color: palette.ink }}>
@@ -88,7 +98,11 @@ export function InvitePage({ slug }: { slug: string }) {
           </div>
         </section>
       ) : (
-      <>
+      <AnimatePresence mode="wait">
+      {hasOpening && !opened ? (
+        <InvitationOpening key="opening" invitation={invitation} onOpen={() => setOpened(true)} />
+      ) : (
+      <div key="invitation">
       {invitation.music && musicOn && <audio src={invitation.music} autoPlay loop />}
       <TemplateStage invitation={invitation} plan={plan} />
 
@@ -183,7 +197,9 @@ export function InvitePage({ slug }: { slug: string }) {
           </button>
         )}
       </section>
-      </>
+      </div>
+      )}
+      </AnimatePresence>
       )}
     </main>
   );

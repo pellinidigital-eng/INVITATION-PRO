@@ -35,6 +35,8 @@ export type Invitation = {
   time: string;
   place: string;
   description: string;
+  story?: string;
+  opening?: "direct" | "envelope" | "balloon";
   dressCode: string;
   whatsapp: string;
   palette: string;

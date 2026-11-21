@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type React from "react";
 import { motion } from "framer-motion";
 import { CalendarPlus, Clock3, MapPin, MessageCircle, QrCode, Shirt, Sparkles } from "lucide-react";
@@ -115,6 +116,13 @@ export function TemplateStage({ invitation, compact = false, plan = "premium" }:
             )}
           </div>
 
+          {invitation.story && (
+            <section className="mt-4 w-full rounded-[24px] border p-5" style={{ borderColor: `${palette.accent}28`, background: surface }}>
+              <h2 className="font-editorial text-3xl">La nostra storia</h2>
+              <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6">{invitation.story}</p>
+            </section>
+          )}
+
           <div className={`mt-4 grid w-full gap-2 ${compact ? "grid-cols-3" : "gap-3 sm:grid-cols-3"}`}>
             <InfoCard compact={compact} icon={<Clock3 size={17} />} label="Quando" value={`${dateLabel}${invitation.time ? `, ${invitation.time}` : ""}`} palette={palette} />
             <InfoCard compact={compact} icon={<MapPin size={17} />} label="Dove" value={invitation.place || "Location da definire"} palette={palette} />
@@ -171,7 +179,7 @@ export function TemplateStage({ invitation, compact = false, plan = "premium" }:
             </div>
             <div className="rounded-[28px] border p-6" style={{ borderColor: `${palette.accent}28`, background: surface }}>
               <div className="text-xs font-semibold uppercase tracking-[.18em]" style={{ color: palette.accent }}>{copy.countdown}</div>
-              <Countdown date={invitation.date} palette={palette} />
+              <Countdown date={invitation.date} time={invitation.time} palette={palette} />
               <p className="mt-5 text-sm leading-6 opacity-65">{copy.musicLine}</p>
             </div>
           </div>
@@ -216,21 +224,28 @@ function InfoCard({ compact = false, icon, label, value, palette }: { compact?: 
   );
 }
 
-function Countdown({ date, palette }: { date: string; palette: Palette }) {
-  const parsed = date ? new Date(date).getTime() : Date.now();
-  const target = Number.isFinite(parsed) ? parsed : Date.now();
-  const diff = Math.max(0, target - Date.now());
+function Countdown({ date, time, palette }: { date: string; time: string; palette: Palette }) {
+  const [now, setNow] = useState<number>();
+  useEffect(() => {
+    const tick = () => setNow(Date.now());
+    tick();
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const target = Date.parse(`${date}T${time || "00:00"}`);
+  const diff = now === undefined || !Number.isFinite(target) ? 0 : Math.max(0, target - now);
   const days = Math.floor(diff / 86400000);
   const hours = Math.floor((diff % 86400000) / 3600000);
   const minutes = Math.floor((diff % 3600000) / 60000);
   return (
-    <div className="mt-4 grid grid-cols-3 gap-3">
+    <div className="mt-4 grid grid-cols-4 gap-2">
       {[
         ["Giorni", days],
         ["Ore", hours],
-        ["Min", minutes]
+        ["Min", minutes],
+        ["Sec", Math.floor((diff % 60000) / 1000)]
       ].map(([label, value]) => (
-        <div key={label} className="rounded-2xl p-4 text-center" style={{ background: palette.soft }}>
+        <div key={label} className="min-w-0 rounded-2xl px-1 py-3 text-center" style={{ background: palette.soft }}>
           <div className="text-2xl font-semibold sm:text-3xl">{value}</div>
           <div className="mt-1 text-[10px] font-semibold uppercase tracking-[.16em] opacity-62">{label}</div>
         </div>

@@ -44,6 +44,7 @@ import { buildInviteCopy } from "@/lib/copy-engine";
 import { deleteInvitation, loadInvitations, saveInvitation, uniqueSlug } from "@/lib/storage";
 import { encodeInvitation } from "@/lib/share";
 import { cleanText, invitationStatus, normalizeInvitation } from "@/lib/invitation-utils";
+import { InvitationOpening } from "@/components/InvitationOpening";
 import { TemplateStage } from "@/components/TemplateStage";
 
 const styleOptions = Object.keys(styleRules);
@@ -61,6 +62,7 @@ export function StudioApp() {
   const [invitations, setInvitations] = useState<Invitation[]>([defaultInvitation]);
   const [active, setActive] = useState<Invitation>(defaultInvitation);
   const [plan, setPlan] = useState<ProductPlan>("premium");
+  const [previewOpened, setPreviewOpened] = useState(false);
   const [qr, setQr] = useState("");
   const [origin, setOrigin] = useState("");
   const [notice, setNotice] = useState("QR e link si aggiornano automaticamente.");
@@ -91,7 +93,7 @@ export function StudioApp() {
   async function downloadQrFor(invitation = active) {
     try {
       const qrData = await QRCode.toDataURL(inviteUrl(invitation), {
-        errorCorrectionLevel: "H",
+        errorCorrectionLevel: "M",
         margin: 4,
         width: 2400,
         color: { dark: "#111111", light: "#ffffff" }
@@ -133,11 +135,14 @@ export function StudioApp() {
   useEffect(() => {
     if (!origin) return;
     QRCode.toDataURL(shareUrl, {
-      errorCorrectionLevel: "H",
+      errorCorrectionLevel: "M",
       margin: 2,
       width: 1100,
       color: { dark: palette.ink, light: "#ffffff" }
-    }).then(setQr).catch(() => setNotice("QR non generato: link troppo lungo o browser in errore."));
+    }).then(setQr).catch(() => {
+      setQr("");
+      setNotice("QR non generato: prova a ridurre la lunghezza dei testi.");
+    });
   }, [origin, shareUrl, palette.ink]);
 
   useEffect(() => {
@@ -231,14 +236,7 @@ export function StudioApp() {
       const next = saveInvitation(invitation);
       setActive(invitation);
       setInvitations(next);
-      const qrData = await QRCode.toDataURL(`${window.location.origin}/invite/${invitation.slug}?p=${publicPlan}&d=${encodeURIComponent(encodeInvitation(invitation))}`, {
-        errorCorrectionLevel: "H",
-        margin: 2,
-        width: 1100,
-        color: { dark: palette.ink, light: "#ffffff" }
-      });
-      setQr(qrData);
-      setNotice("Invito salvato. Link pubblico e QR sono allineati.");
+      setNotice("Invito salvato. Puoi copiare il link per condividerlo.");
       window.localStorage.removeItem(DRAFT_KEY);
     } catch {
       setNotice("Salvataggio non completato: riduci i media caricati e riprova.");
@@ -255,7 +253,7 @@ export function StudioApp() {
     setBusy("qr");
     try {
       const printQr = await QRCode.toDataURL(shareUrl, {
-        errorCorrectionLevel: "H",
+        errorCorrectionLevel: "M",
         margin: 4,
         width: 2400,
         color: { dark: "#111111", light: "#ffffff" }
@@ -415,7 +413,11 @@ export function StudioApp() {
             <div className="absolute inset-y-8 left-8 right-8 rounded-[48px] bg-[#c9b083]/20 blur-3xl" />
             <motion.div className="relative w-full max-w-[390px] rounded-[42px] border border-black/12 bg-[#111] p-3 shadow-soft-xl" initial={{ opacity: 0, y: 32, rotate: -1 }} animate={{ opacity: 1, y: 0, rotate: 0 }}>
               <div className="overflow-hidden rounded-[32px] bg-white">
-                <TemplateStage invitation={active} compact plan={plan} />
+                {active.opening && active.opening !== "direct" && !previewOpened ? (
+                  <InvitationOpening invitation={active} compact onOpen={() => setPreviewOpened(true)} />
+                ) : (
+                  <TemplateStage invitation={active} compact plan={plan} />
+                )}
               </div>
             </motion.div>
           </div>
@@ -493,6 +495,26 @@ export function StudioApp() {
               Descrizione intelligente
               <textarea value={active.description} maxLength={620} onChange={(event) => update({ description: cleanText(event.target.value, "", 620) })} className="mt-2 min-h-28 w-full rounded-2xl border border-black/10 bg-white p-4 leading-7 outline-none focus:border-black/40" />
             </label>
+            <label className="mt-3 block text-sm font-medium">
+              La nostra storia
+              <textarea value={active.story ?? ""} maxLength={360} onChange={(event) => update({ story: event.target.value })} className="mt-2 min-h-24 w-full rounded-2xl border border-black/10 p-4" />
+            </label>
+            <label className="mt-3 block text-sm font-medium">
+              Apertura dell’invito
+              <select value={active.opening ?? "direct"} onChange={(event) => {
+                update({ opening: event.target.value as Invitation["opening"] });
+                setPreviewOpened(false);
+              }} className="mt-2 block w-full rounded-2xl border border-black/10 bg-white p-3">
+                <option value="direct">Diretta</option>
+                <option value="envelope">Busta con sigillo</option>
+                <option value="balloon">Palloncino</option>
+              </select>
+            </label>
+            {previewOpened && active.opening !== "direct" && (
+              <button type="button" onClick={() => setPreviewOpened(false)} className="mt-2 min-h-11 text-sm font-semibold underline">
+                Rivedi l’apertura
+              </button>
+            )}
             {(status.missing.length > 0 || status.pastDate) && (
               <div className="mt-4 flex gap-3 rounded-2xl border border-[#b35f42]/20 bg-[#fff4ef] p-4 text-sm leading-6 text-[#7a3926]">
                 <AlertTriangle className="mt-1 shrink-0" size={17} />

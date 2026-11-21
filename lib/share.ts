@@ -8,6 +8,8 @@ const shareKeys: (keyof Invitation)[] = [
   "time",
   "place",
   "description",
+  "story",
+  "opening",
   "dressCode",
   "whatsapp",
   "palette",
@@ -19,16 +21,16 @@ const shareKeys: (keyof Invitation)[] = [
 export function encodeInvitation(invitation: Invitation) {
   const compact = shareKeys.reduce<Record<string, string>>((acc, key) => {
     const value = invitation[key];
-    if (typeof value === "string") acc[key] = key === "description" ? value.slice(0, 360) : value.slice(0, 120);
+    if (typeof value === "string") acc[key] = value.slice(0, key === "description" || key === "story" ? 360 : 120);
     return acc;
   }, {});
-  return btoa(unescape(encodeURIComponent(JSON.stringify(compact))));
+  return btoa(unescape(encodeURIComponent(JSON.stringify(compact)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 export function decodeInvitation(payload: string | null, fallback: Invitation = defaultInvitation) {
   if (!payload) return fallback;
   try {
-    const decoded = JSON.parse(decodeURIComponent(escape(atob(payload)))) as Partial<Invitation>;
+    const decoded = JSON.parse(decodeURIComponent(escape(atob(payload.replace(/-/g, "+").replace(/_/g, "/"))))) as Partial<Invitation>;
     return {
       ...fallback,
       ...decoded,
