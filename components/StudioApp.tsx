@@ -549,9 +549,18 @@ export function StudioApp() {
                   "bestFor" in template ? template.bestFor.some((event) => event === active.eventType) : false)
               ).map((template) => {
                 const locked = !features.templates.some((id) => id === template.id);
+                const artwork = "artwork" in template ? template.artwork : undefined;
                 return (
                 <button key={template.id} aria-pressed={active.template === template.id} onClick={() => locked ? setNotice("Template premium: passa a Premium per usarlo senza limiti.") : update({ template: template.id as TemplateId, palette: template.palette })} className={`group overflow-hidden rounded-[24px] border bg-white p-3 text-left transition hover:-translate-y-0.5 ${active.template === template.id ? "border-black shadow-soft-xl" : "border-black/10 hover:border-black/30"} ${locked ? "opacity-60" : ""}`}>
-                  <div className="relative h-14 rounded-xl sm:h-20" style={{ background: template.preview }}>
+                  <div className="relative h-14 overflow-hidden rounded-xl sm:h-20" style={{ background: template.preview }}>
+                    {artwork && (
+                      <img
+                        src={artwork.src}
+                        alt=""
+                        loading="lazy"
+                        className={`absolute inset-0 h-full w-full object-cover ${artwork.position === "top" ? "object-[center_10%]" : "object-[center_85%]"}`}
+                      />
+                    )}
                     {locked && <span className="absolute right-1 top-1 rounded-full bg-black px-3 py-1 text-[11px] font-semibold text-white">Premium</span>}
                   </div>
                   <div className="mt-3 text-sm font-semibold">{template.name}</div>
