@@ -27,7 +27,9 @@ import {
   demoInvitations,
   EventType,
   eventTypes,
+  getEventRecommendation,
   getSmartSuggestion,
+  smartCopy,
   Invitation,
   palettes,
   planFeatures,
@@ -70,6 +72,7 @@ export function StudioApp() {
   const features = planFeatures[plan];
   const publicPlan = plan;
   const status = invitationStatus(active);
+  const recommendation = getEventRecommendation(active.eventType, plan);
   const shareUrl = origin ? `${origin}/invite/${active.slug}?p=${publicPlan}&d=${encodeURIComponent(encodeInvitation(active))}` : `/invite/${active.slug}`;
   const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(`Apri il mio invito digitale: ${shareUrl}`)}`;
 
@@ -160,16 +163,25 @@ export function StudioApp() {
   }
 
   function applyEvent(eventType: EventType) {
-    const suggestion = getSmartSuggestion(eventType, active.style);
-    const nextTemplate = features.templates.some((id) => id === suggestion.template) ? suggestion.template : "lumiere";
-    update({
-      eventType,
-      palette: suggestion.palette,
-      template: nextTemplate,
-      tone: suggestion.tone,
-      description: suggestion.description
+    const suggestion = getEventRecommendation(eventType, plan);
+    setActive((current) => {
+      const previousDefault = smartCopy[current.eventType].intro.join(" ");
+      const isExampleText = demoInvitations.some((item) => item.id === current.id && item.description === current.description);
+      const description = !current.description.trim() || current.description === previousDefault || isExampleText
+        ? smartCopy[eventType].intro.join(" ")
+        : current.description;
+      return {
+        ...current,
+        eventType,
+        palette: suggestion.palette,
+        template: suggestion.template,
+        style: suggestion.style,
+        tone: suggestion.tone,
+        writingStyle: suggestion.writingStyle,
+        description
+      };
     });
-    if (nextTemplate !== suggestion.template) setNotice("Questo evento suggerisce un template premium. In demo ho applicato una variante gratuita.");
+    setNotice("");
   }
 
   function applyStyle(style: string) {
@@ -391,11 +403,14 @@ export function StudioApp() {
           <Panel title="Tipo di evento" icon={<CalendarDays size={17} />}>
             <div className="grid grid-cols-2 gap-2">
               {eventTypes.map(({ id, label, icon: Icon }) => (
-                <button key={id} onClick={() => applyEvent(id)} className={`flex items-center gap-2 rounded-2xl border p-3 text-left text-sm transition ${active.eventType === id ? "border-black bg-black text-white" : "border-black/10 bg-white hover:border-black/30"}`}>
+                <button key={id} aria-pressed={active.eventType === id} onClick={() => applyEvent(id)} className={`flex items-center gap-2 rounded-2xl border p-3 text-left text-sm transition ${active.eventType === id ? "border-black bg-black text-white" : "border-black/10 bg-white hover:border-black/30"}`}>
                   <Icon size={16} /> {label}
                 </button>
               ))}
             </div>
+            <p className="mt-3 text-sm text-black/65">
+              Consigliati <strong>{recommendation.templateName}</strong> e stile <strong>{writingStyles[recommendation.writingStyle].label}</strong>
+            </p>
           </Panel>
 
           <details className="rounded-2xl border border-black/10 bg-white p-3">

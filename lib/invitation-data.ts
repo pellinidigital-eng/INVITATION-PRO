@@ -563,6 +563,37 @@ export const styleRules: Record<string, { palette: keyof typeof palettes; tone: 
   "business": { palette: "graphite", tone: "Professionale", template: "executive" }
 };
 
+const eventRecommendations = {
+  matrimonio: { template: "ulivo", writingStyle: "poetico", style: "elegante" },
+  compleanno: { template: "festa-pop", writingStyle: "festoso", style: "cartoon" },
+  battesimo: { template: "nuvola-celeste", writingStyle: "affettuoso", style: "botanico" },
+  comunione: { template: "spighe", writingStyle: "solenne", style: "elegante" },
+  "baby-shower": { template: "arcobaleno", writingStyle: "confidenziale", style: "cartoon" },
+  laurea: { template: "lumiere", writingStyle: "festoso", style: "elegante" },
+  anniversario: { template: "ulivo", writingStyle: "narrativo", style: "romantico" },
+  business: { template: "executive", demoTemplate: "lumiere", writingStyle: "formale", style: "business" }
+} satisfies Record<EventType, {
+  template: TemplateId;
+  demoTemplate?: TemplateId;
+  writingStyle: import("./writing-styles").WritingStyle;
+  style: string;
+}>;
+
+export function getEventRecommendation(eventType: EventType, plan: ProductPlan) {
+  const recommendation = eventRecommendations[eventType];
+  const templateId = plan === "free" && "demoTemplate" in recommendation
+    ? recommendation.demoTemplate
+    : recommendation.template;
+  const model = templates.find((item) => item.id === templateId) ?? templates[0];
+  return {
+    ...recommendation,
+    template: model.id,
+    templateName: model.name,
+    palette: model.palette,
+    tone: styleRules[recommendation.style].tone
+  };
+}
+
 export function getSmartSuggestion(eventType: EventType, style: string) {
   const copy = smartCopy[eventType];
   const rule = styleRules[style.toLowerCase()] ?? styleRules.elegante;
