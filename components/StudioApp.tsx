@@ -1,14 +1,12 @@
 "use client";
 
 import type React from "react";
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import QRCode from "qrcode";
 import {
   AlertTriangle,
-  ArrowUpRight,
   CalendarDays,
-  Check,
   Copy,
   Download,
   Eye,
@@ -34,7 +32,6 @@ import {
   palettes,
   planFeatures,
   ProductPlan,
-  qualitySignals,
   slugify,
   styleRules,
   templates,
@@ -44,7 +41,6 @@ import { buildInviteCopy } from "@/lib/copy-engine";
 import { deleteInvitation, loadInvitations, saveInvitation, uniqueSlug } from "@/lib/storage";
 import { encodeInvitation } from "@/lib/share";
 import { cleanText, invitationStatus, normalizeInvitation } from "@/lib/invitation-utils";
-import { InvitationOpening } from "@/components/InvitationOpening";
 import { TemplateStage } from "@/components/TemplateStage";
 
 const styleOptions = Object.keys(styleRules);
@@ -62,13 +58,11 @@ export function StudioApp() {
   const [invitations, setInvitations] = useState<Invitation[]>([defaultInvitation]);
   const [active, setActive] = useState<Invitation>(defaultInvitation);
   const [plan, setPlan] = useState<ProductPlan>("premium");
-  const [previewOpened, setPreviewOpened] = useState(false);
   const [qr, setQr] = useState("");
   const [origin, setOrigin] = useState("");
-  const [notice, setNotice] = useState("QR e link si aggiornano automaticamente.");
+  const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState("");
   const [hydrated, setHydrated] = useState(false);
-  const previewRef = useRef<HTMLDivElement>(null);
   const generatedCopy = buildInviteCopy(active);
   const palette = palettes[active.palette as keyof typeof palettes] ?? palettes.champagne;
   const features = IS_TEST_MODE ? planFeatures.premium : planFeatures[plan];
@@ -119,7 +113,9 @@ export function StudioApp() {
       window.localStorage.removeItem(DRAFT_KEY);
     }
     setInvitations(stored);
-    setActive(draftInvitation ?? stored[0] ?? defaultInvitation);
+    const editSlug = new URLSearchParams(window.location.search).get("edit");
+    const selected = editSlug ? stored.find((item) => item.slug === editSlug) : undefined;
+    setActive(selected ?? draftInvitation ?? stored[0] ?? defaultInvitation);
     setHydrated(true);
   }, []);
 
@@ -150,13 +146,6 @@ export function StudioApp() {
     setActive((current) => ({ ...current, template: "lumiere", palette: "champagne" }));
     setNotice("Piano Demo attivo: ho sostituito il template premium con Lumiere.");
   }, [active.template, features.templates]);
-
-  const smartHeadline = useMemo(() => {
-    if (active.eventType === "matrimonio" && active.style.toLowerCase().includes("elegante")) return "Suite nuziale luxury pronta per RSVP WhatsApp";
-    if (active.eventType === "compleanno" && active.style.toLowerCase().includes("cartoon")) return "Invito allegro, colorato e morbido senza perdere qualità";
-    if (active.eventType === "business") return "Landing evento business con agenda, QR e conversione";
-    return "Esperienza evento coerente generata da logiche locali";
-  }, [active.eventType, active.style]);
 
   function update(patch: Partial<Invitation>) {
     setActive((current) => ({ ...current, ...patch }));
@@ -222,7 +211,7 @@ export function StudioApp() {
     event.target.value = "";
   }
 
-  async function persist() {
+  async function persist(openResult = false) {
     setBusy("save");
     try {
       const normalized = normalizeInvitation(active);
@@ -238,6 +227,7 @@ export function StudioApp() {
       setInvitations(next);
       setNotice("Invito salvato. Puoi copiare il link per condividerlo.");
       window.localStorage.removeItem(DRAFT_KEY);
+      if (openResult) window.location.assign(`${inviteUrl(invitation)}&editor=1`);
     } catch {
       setNotice("Salvataggio non completato: riduci i media caricati e riprova.");
     } finally {
@@ -305,7 +295,15 @@ export function StudioApp() {
         setNotice("Preview non disponibile: riapri la pagina e riprova.");
         return;
       }
-      const canvas = await html2canvas(node, { backgroundColor: null, scale: 2, useCORS: true });
+      const canvas = await html2canvas(node, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true,
+        onclone: (clonedDocument) => {
+          const stage = clonedDocument.getElementById("export-stage");
+          if (stage) stage.style.right = "0";
+        }
+      });
       const link = document.createElement("a");
       link.download = `${active.slug || "invito"}-preview.png`;
       link.href = canvas.toDataURL("image/png");
@@ -332,7 +330,15 @@ export function StudioApp() {
         setNotice("Preview non disponibile: riapri la pagina e riprova.");
         return;
       }
-      const canvas = await html2canvas(node, { backgroundColor: null, scale: 2, useCORS: true });
+      const canvas = await html2canvas(node, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true,
+        onclone: (clonedDocument) => {
+          const stage = clonedDocument.getElementById("export-stage");
+          if (stage) stage.style.right = "0";
+        }
+      });
       const pdf = new jsPDF("p", "mm", "a4");
       const width = 210;
       const height = (canvas.height * width) / canvas.width;
@@ -356,77 +362,25 @@ export function StudioApp() {
           </motion.div>
         )}
       </AnimatePresence>
-      <section className="relative overflow-hidden border-b border-black/10 bg-[#f7f3eb]">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-5 sm:px-6 lg:grid-cols-[.9fr_1.1fr] lg:py-8">
-          <div className="flex min-h-[88vh] flex-col justify-between gap-6 py-4">
-            <nav className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="grid h-10 w-10 place-items-center rounded-full bg-[#15151b] text-white"><SparkIcon /></div>
-                <div>
-                  <div className="text-sm font-semibold">Invitation Creator PRO</div>
-                  <div className="text-xs text-black/50">Premium event studio</div>
-                </div>
-              </div>
-              <a className="hidden items-center gap-2 rounded-full border border-black/10 bg-white/70 px-4 py-2 text-sm font-semibold sm:inline-flex" href={shareUrl} target="_blank" rel="noreferrer">
-                Vedi invito <ArrowUpRight size={15} />
-              </a>
-            </nav>
-            <div className="flex w-fit rounded-full border border-black/10 bg-white p-1 shadow-inner-glow">
-              {(["free", "premium"] as ProductPlan[]).map((item) => (
-                <button key={item} onClick={() => setPlan(item)} className={`rounded-full px-4 py-2 text-xs font-semibold transition ${plan === item ? "bg-black text-white" : "text-black/55"}`}>
-                  {planFeatures[item].label}
-                </button>
-              ))}
-            </div>
-            <div className="max-w-xl">
-              <div className="mb-5 inline-flex rounded-full border border-black/10 bg-white/70 px-3 py-2 text-[11px] uppercase tracking-[.12em] shadow-inner-glow sm:text-xs sm:tracking-[.18em]">
-                No AI, no paid API, all local logic
-              </div>
-              <h1 className="font-editorial text-[clamp(3.35rem,15vw,6.5rem)] leading-[.86] text-[#15151b]">
-                Inviti digitali che sembrano couture.
-              </h1>
-              <p className="mt-6 text-lg leading-8 text-black/68">
-                {smartHeadline}. Template animati, copy condizionale, QR, dashboard, export e una pagina invito pronta da condividere.
-              </p>
-              <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {qualitySignals.map((signal) => (
-                  <div key={signal.label} className="min-h-[96px] rounded-[22px] border border-black/10 bg-white/82 p-4 shadow-inner-glow backdrop-blur-xl">
-                    <div className="text-xl font-semibold leading-none">{signal.value}</div>
-                    <div className="mt-2 text-[11px] font-medium uppercase leading-4 tracking-[.14em] text-black/48">{signal.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <button disabled={busy === "save"} onClick={persist} className="inline-flex items-center gap-2 rounded-full bg-[#15151b] px-5 py-3 text-sm font-semibold text-white shadow-soft-xl disabled:opacity-60">
-                <Save size={17} /> {busy === "save" ? "Salvataggio" : "Salva invito"}
-              </button>
-              <a href={shareUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-semibold">
-                <ArrowUpRight size={17} /> Vedi invito
-              </a>
-              <button onClick={() => copyLink()} className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-semibold">
-                <Copy size={17} /> Copia link
-              </button>
-            </div>
+      <header className="border-b border-black/10 bg-[#f7f3eb]">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-6">
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#15151b] text-white"><SparkIcon /></div>
+            <h1 className="text-base font-semibold">Invitation Creator PRO</h1>
           </div>
-          <div ref={previewRef} className="relative flex items-center justify-center lg:min-h-[88vh]">
-            <div className="absolute inset-y-8 left-8 right-8 rounded-[48px] bg-[#c9b083]/20 blur-3xl" />
-            <motion.div className="relative w-full max-w-[390px] rounded-[42px] border border-black/12 bg-[#111] p-3 shadow-soft-xl" initial={{ opacity: 0, y: 32, rotate: -1 }} animate={{ opacity: 1, y: 0, rotate: 0 }}>
-              <div className="overflow-hidden rounded-[32px] bg-white">
-                {active.opening && active.opening !== "direct" && !previewOpened ? (
-                  <InvitationOpening invitation={active} compact onOpen={() => setPreviewOpened(true)} />
-                ) : (
-                  <TemplateStage invitation={active} compact plan={plan} />
-                )}
-              </div>
-            </motion.div>
+          <div className="flex w-fit rounded-full border border-black/10 bg-white p-1">
+            {(["free", "premium"] as ProductPlan[]).map((item) => (
+              <button key={item} onClick={() => setPlan(item)} aria-pressed={plan === item} className={`min-h-10 rounded-full px-4 text-xs font-semibold ${plan === item ? "bg-black text-white" : "text-black/55"}`}>
+                {planFeatures[item].label}
+              </button>
+            ))}
           </div>
         </div>
-      </section>
+      </header>
 
-      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[360px_1fr_340px]">
+      <section className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[290px_minmax(0,1fr)]">
         <aside className="space-y-4 lg:sticky lg:top-4 lg:self-start">
-          <Panel title="1. Scelta evento" icon={<CalendarDays size={17} />}>
+          <Panel title="Tipo di evento" icon={<CalendarDays size={17} />}>
             <div className="grid grid-cols-2 gap-2">
               {eventTypes.map(({ id, label, icon: Icon }) => (
                 <button key={id} onClick={() => applyEvent(id)} className={`flex items-center gap-2 rounded-2xl border p-3 text-left text-sm transition ${active.eventType === id ? "border-black bg-black text-white" : "border-black/10 bg-white hover:border-black/30"}`}>
@@ -436,6 +390,8 @@ export function StudioApp() {
             </div>
           </Panel>
 
+          <details className="rounded-2xl border border-black/10 bg-white p-3">
+            <summary className="cursor-pointer text-sm font-semibold">Inviti di esempio</summary>
           <Panel title="Demo commerciali" icon={<Eye size={17} />}>
             <div className="space-y-2">
               {demoInvitations.map((demo) => (
@@ -447,7 +403,11 @@ export function StudioApp() {
             </div>
           </Panel>
 
-          <Panel title="2. Direzione creativa" icon={<Palette size={17} />}>
+          </details>
+
+          <details className="rounded-2xl border border-black/10 bg-white p-3">
+            <summary className="cursor-pointer text-sm font-semibold">Stile, colori e caratteri</summary>
+          <Panel title="Direzione creativa" icon={<Palette size={17} />}>
             <div className="grid grid-cols-2 gap-2">
               {styleOptions.map((style) => (
                 <button key={style} onClick={() => applyStyle(style)} className={`rounded-2xl border px-3 py-3 text-left text-sm capitalize ${active.style.toLowerCase() === style ? "border-black bg-black text-white" : "border-black/10 bg-white"}`}>
@@ -465,7 +425,11 @@ export function StudioApp() {
             </select>
           </Panel>
 
-          <Panel title="3. Upload media" icon={<Upload size={17} />}>
+          </details>
+
+          <details className="rounded-2xl border border-black/10 bg-white p-3">
+            <summary className="cursor-pointer text-sm font-semibold">Foto, video e musica</summary>
+          <Panel title="Carica file" icon={<Upload size={17} />}>
             <FileInput label="Foto / immagini evento" accept="image/*" multiple onChange={(event) => readFiles(event, "images")} />
             <FileInput label="Logo" accept="image/*" onChange={(event) => readFiles(event, "logo")} />
             <FileInput label="Video breve" accept="video/*" onChange={(event) => readFiles(event, "video")} />
@@ -479,6 +443,7 @@ export function StudioApp() {
             )}
             {active.music && <div className="mt-3 rounded-2xl bg-black/[.04] p-3 text-xs text-black/60">Musica caricata. Sara controllabile nella pagina invito.</div>}
           </Panel>
+          </details>
         </aside>
 
         <section className="space-y-4">
@@ -503,18 +468,12 @@ export function StudioApp() {
               Apertura dell’invito
               <select value={active.opening ?? "direct"} onChange={(event) => {
                 update({ opening: event.target.value as Invitation["opening"] });
-                setPreviewOpened(false);
               }} className="mt-2 block w-full rounded-2xl border border-black/10 bg-white p-3">
                 <option value="direct">Diretta</option>
                 <option value="envelope">Busta con sigillo</option>
                 <option value="balloon">Palloncino</option>
               </select>
             </label>
-            {previewOpened && active.opening !== "direct" && (
-              <button type="button" onClick={() => setPreviewOpened(false)} className="mt-2 min-h-11 text-sm font-semibold underline">
-                Rivedi l’apertura
-              </button>
-            )}
             {(status.missing.length > 0 || status.pastDate) && (
               <div className="mt-4 flex gap-3 rounded-2xl border border-[#b35f42]/20 bg-[#fff4ef] p-4 text-sm leading-6 text-[#7a3926]">
                 <AlertTriangle className="mt-1 shrink-0" size={17} />
@@ -547,18 +506,24 @@ export function StudioApp() {
               );})}
             </div>
           </Panel>
-          <MarketingAssets active={active} qr={qr} shareUrl={shareUrl} palette={palette} plan={plan} />
+          <div className="space-y-2">
+            <button type="button" disabled={!hydrated || busy === "save"} onClick={() => persist(true)} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#15151b] px-6 text-sm font-semibold text-white disabled:opacity-60 sm:w-auto">
+              <Play size={17} /> {busy === "save" ? "Generazione in corso…" : "Genera invito"}
+            </button>
+            {notice && <p role="status" className="text-sm text-black/65">{notice}</p>}
+          </div>
         </section>
 
-        <aside className="space-y-4 lg:sticky lg:top-4 lg:self-start">
-          <div id="qr-section">
+        <details id="qr-section" className="space-y-4 rounded-2xl border border-black/10 bg-white p-4 lg:col-span-2">
+          <summary className="cursor-pointer text-sm font-semibold">Inviti salvati, QR ed esportazione</summary>
+          <div>
           <Panel title="QR code premium" icon={<QrCode size={17} />}>
             <PremiumQrCard
               active={active}
               qr={qr}
               shareUrl={shareUrl}
               accent={palette.accent}
-              onSave={persist}
+              onSave={() => persist()}
               onCopy={() => copyLink()}
               onDownload={downloadQrPrint}
               whatsappShareUrl={whatsappShareUrl}
@@ -598,22 +563,13 @@ export function StudioApp() {
             </button>
           </Panel>
 
-          <Panel title="Conversion layer" icon={<Check size={17} />}>
-            <div className="space-y-3 text-sm leading-6 text-black/64">
-              <p>WhatsApp RSVP precompilato, QR code scaricabile, countdown, calendario, mappa e timeline vengono combinati in base a evento, stile, tono e palette.</p>
-              <p className="font-medium text-black">Nessun servizio AI o chiave esterna: tutto è generato da librerie locali.</p>
-              <div className="rounded-2xl bg-black p-4 text-white">
-                <div className="text-xs uppercase tracking-[.2em] text-white/50">Post-acquisto Shopify</div>
-                <p className="mt-2 text-sm leading-6 text-white/78">Invia accesso al tool, oppure vendi un servizio premium personalizzato con link finale, QR stampabile e asset social gia pronti.</p>
-              </div>
-            </div>
-          </Panel>
-        </aside>
+          <MarketingAssets active={active} qr={qr} shareUrl={shareUrl} palette={palette} plan={plan} />
+        </details>
       </section>
 
-      <section className="border-t border-black/10">
-        <TemplateStage invitation={active} plan={plan} />
-      </section>
+      <div aria-hidden="true" ref={(node) => { if (node) node.inert = true; }} id="export-stage" className="pointer-events-none absolute right-full top-0 w-[390px]">
+        <TemplateStage invitation={active} compact plan={plan} />
+      </div>
     </main>
   );
 }

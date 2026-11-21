@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CalendarPlus, Download, MessageCircle, QrCode, Share2, Volume2 } from "lucide-react";
 import { buildInviteCopy } from "@/lib/copy-engine";
 import { defaultInvitation, Invitation, palettes, planFeatures, ProductPlan } from "@/lib/invitation-data";
-import { decodeInvitation } from "@/lib/share";
+import { decodeInvitation, encodeInvitation } from "@/lib/share";
 import { findInvitation, isDeletedSlug, saveInvitation } from "@/lib/storage";
 import { normalizeInvitation } from "@/lib/invitation-utils";
 import { InvitationOpening } from "@/components/InvitationOpening";
@@ -18,6 +18,7 @@ export function InvitePage({ slug }: { slug: string }) {
   const [invitation, setInvitation] = useState<Invitation>(defaultInvitation);
   const [qr, setQr] = useState("");
   const [loading, setLoading] = useState(true);
+  const [editorView, setEditorView] = useState(false);
   const [opened, setOpened] = useState(false);
   const [unavailable, setUnavailable] = useState(false);
   const [url, setUrl] = useState("");
@@ -30,20 +31,26 @@ export function InvitePage({ slug }: { slug: string }) {
   const whatsappUrl = whatsappDigits ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(copy.whatsapp)}` : "";
 
   useEffect(() => {
-    setUrl(window.location.href);
+    const address = new URL(window.location.href);
+    const fromEditor = address.searchParams.get("editor") === "1";
+    address.searchParams.delete("editor");
     setOpened(false);
     setLoading(false);
     const found = findInvitation(slug);
     const payload = new URLSearchParams(window.location.search).get("d");
     const planParam = new URLSearchParams(window.location.search).get("p");
+    const showEditor = fromEditor && Boolean(found);
+    setEditorView(showEditor);
+    if (showEditor && found) address.searchParams.set("d", encodeInvitation(found));
+    setUrl(address.toString());
     setPlan(planParam === "free" ? "free" : "premium");
     if ((!found && !payload) || isDeletedSlug(slug)) {
       setUnavailable(true);
       return;
     }
-    const shared = normalizeInvitation(decodeInvitation(payload, found ?? defaultInvitation));
+    const shared = normalizeInvitation((showEditor && found) ? found : decodeInvitation(payload, found ?? defaultInvitation));
     const visited = { ...shared, slug, visits: (shared.visits || 0) + 1 };
-    if (found) {
+    if (found && !showEditor) {
       try { saveInvitation(visited); } catch { /* The invite remains viewable when local storage is full. */ }
     }
     setInvitation(visited);
@@ -89,6 +96,12 @@ export function InvitePage({ slug }: { slug: string }) {
 
   return (
     <main className="min-h-screen" style={{ background: palette.bg, color: palette.ink }}>
+      {editorView && (
+        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-black/10 bg-white px-4 py-3 text-sm text-[#15151b] sm:px-8">
+          <a className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href={`/?edit=${encodeURIComponent(slug)}`}>← Modifica invito</a>
+          <a className="inline-flex min-h-11 items-center rounded-full bg-[#15151b] px-4 font-semibold text-white" href={`https://wa.me/?text=${encodeURIComponent(`Apri l’invito: ${url}`)}`} target="_blank" rel="noreferrer">Condividi su WhatsApp</a>
+        </header>
+      )}
       {unavailable ? (
         <section className="grid min-h-screen place-items-center px-5 text-center">
           <div className="max-w-md rounded-[32px] border p-8 shadow-soft-xl" style={{ borderColor: `${palette.accent}33`, background: `${palette.bg}dd` }}>
