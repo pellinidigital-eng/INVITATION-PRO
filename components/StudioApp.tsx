@@ -358,7 +358,7 @@ export function StudioApp() {
       </AnimatePresence>
       <section className="relative overflow-hidden border-b border-black/10 bg-[#f7f3eb]">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-5 sm:px-6 lg:grid-cols-[.9fr_1.1fr] lg:py-8">
-          <div className="flex min-h-[88vh] flex-col justify-between py-4">
+          <div className="flex min-h-[88vh] flex-col justify-between gap-6 py-4">
             <nav className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="grid h-10 w-10 place-items-center rounded-full bg-[#15151b] text-white"><SparkIcon /></div>
@@ -371,7 +371,7 @@ export function StudioApp() {
                 Vedi invito <ArrowUpRight size={15} />
               </a>
             </nav>
-            <div className="mt-6 flex w-fit rounded-full border border-black/10 bg-white p-1 shadow-inner-glow">
+            <div className="flex w-fit rounded-full border border-black/10 bg-white p-1 shadow-inner-glow">
               {(["free", "premium"] as ProductPlan[]).map((item) => (
                 <button key={item} onClick={() => setPlan(item)} className={`rounded-full px-4 py-2 text-xs font-semibold transition ${plan === item ? "bg-black text-white" : "text-black/55"}`}>
                   {planFeatures[item].label}
@@ -379,7 +379,7 @@ export function StudioApp() {
               ))}
             </div>
             <div className="max-w-xl">
-              <div className="mb-5 inline-flex rounded-full border border-black/10 bg-white/70 px-3 py-2 text-xs uppercase tracking-[.18em] shadow-inner-glow">
+              <div className="mb-5 inline-flex rounded-full border border-black/10 bg-white/70 px-3 py-2 text-[11px] uppercase tracking-[.12em] shadow-inner-glow sm:text-xs sm:tracking-[.18em]">
                 No AI, no paid API, all local logic
               </div>
               <h1 className="font-editorial text-[clamp(3.35rem,15vw,6.5rem)] leading-[.86] text-[#15151b]">
