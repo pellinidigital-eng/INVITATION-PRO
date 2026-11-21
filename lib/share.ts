@@ -15,7 +15,8 @@ const shareKeys: (keyof Invitation)[] = [
   "palette",
   "font",
   "style",
-  "tone"
+  "tone",
+  "writingStyle"
 ];
 
 export function encodeInvitation(invitation: Invitation) {

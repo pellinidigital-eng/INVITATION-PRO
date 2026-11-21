@@ -1,4 +1,6 @@
-import { EventType, Invitation, TemplateId } from "@/lib/invitation-data";
+import { EventType, Invitation } from "@/lib/invitation-data";
+
+import { writingStyles } from "@/lib/writing-styles";
 
 type EventCopyPack = {
   titles: string[];
@@ -125,7 +127,7 @@ const styleModifiers: Record<string, string[]> = {
   business: ["con precisione editoriale", "con ritmo professionale e pulito", "con un taglio chiaro e orientato al valore"]
 };
 
-const templateLayouts: Record<TemplateId, { order: string[]; note: string }> = {
+const templateLayouts: Record<string, { order: string[]; note: string }> = {
   lumiere: { order: ["hero", "details", "timeline", "qr"], note: "Apertura editoriale e dettagli da cerimonia." },
   botanica: { order: ["hero", "story", "timeline", "map"], note: "Respiro naturale, sezioni ariose e ritmo gentile." },
   cinema: { order: ["hero", "countdown", "details", "qr"], note: "Reveal scenografico, CTA forti e ritmo serale." },
@@ -135,6 +137,7 @@ const templateLayouts: Record<TemplateId, { order: string[]; note: string }> = {
 };
 
 export function buildInviteCopy(invitation: Invitation) {
+  const writing = invitation.writingStyle ? writingStyles[invitation.writingStyle] : undefined;
   const pack = packs[invitation.eventType] ?? packs.matrimonio;
   const seed = hash([
     invitation.eventType,
@@ -159,8 +162,9 @@ export function buildInviteCopy(invitation: Invitation) {
   const userHint = rewriteDescription(invitation.description, pack, seed);
 
   return {
-    title: pick(pack.titles, seed),
+    title: writing?.title ?? pick(pack.titles, seed),
     subtitle: `${pick(pack.subtitles, seed + 1)} ${modifier}.`,
+    writingOpening: writing?.opening,
     opening: userHint ? `${pick(pack.openings, seed + 2)} ${userHint}` : pick(pack.openings, seed + 2),
     emotional: pick(pack.emotional, seed + 3),
     detailsTitle: pick(pack.detailsTitles, seed + 4),

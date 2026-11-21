@@ -23,7 +23,17 @@ export type TemplateId =
   | "cinema"
   | "atelier"
   | "playful"
-  | "executive";
+  | "executive"
+  | "letterpress"
+  | "costiera"
+  | "terracotta"
+  | "erbario"
+  | "artdeco"
+  | "confetti"
+  | "acquerello"
+  | "monocromo"
+  | "tramonto"
+  | "brina";
 
 export type Invitation = {
   id: string;
@@ -43,6 +53,7 @@ export type Invitation = {
   font: string;
   style: string;
   tone: string;
+  writingStyle?: import("./writing-styles").WritingStyle;
   images: string[];
   logo?: string;
   video?: string;
@@ -113,6 +124,29 @@ export const palettes = {
     accent2: "#b35f42"
   }
 };
+
+export const additionalTemplates = [
+  { id: "letterpress", name: "Carta e inchiostro", description: "Carta avorio, righe sottili e bordo tipografico", palette: "champagne",
+    preview: "repeating-linear-gradient(0deg,#eadfcb 0 1px,#fbf7ed 1px 8px)", align: "center", radius: 8, premium: true },
+  { id: "costiera", name: "Costiera", description: "Fasce azzurre e composizione luminosa", palette: "celeste",
+    preview: "repeating-linear-gradient(125deg,#9ec7db 0 16px,#eff8fd 16px 44px)", align: "center", radius: 24, premium: true },
+  { id: "terracotta", name: "Terra di Siena", description: "Archi caldi e dettagli color terracotta", palette: "rose",
+    preview: "radial-gradient(ellipse at 50% 20%,#faebdd 35%,#c97f63 36% 63%,#f5ded0 64%)", align: "center", radius: 52, premium: true },
+  { id: "erbario", name: "Erbario", description: "Toni salvia e cerchi sovrapposti", palette: "emerald",
+    preview: "radial-gradient(circle at 10% 15%,#adc5a7 0 20%,transparent 21%),radial-gradient(circle at 90% 85%,#759681 0 22%,#edf4e9 23%)", align: "left", radius: 18, premium: true },
+  { id: "artdeco", name: "Notte Déco", description: "Oro a ventaglio su fondo scuro", palette: "noir",
+    preview: "repeating-conic-gradient(from 12deg at 50% 85%,#17191d 0 11deg,#b39454 11deg 12deg,#24252a 12deg 24deg)", align: "center", radius: 4, premium: true },
+  { id: "confetti", name: "Confetti Pop", description: "Motivo a pois e bordi arrotondati", palette: "celeste",
+    preview: "radial-gradient(circle,#629ec1 12%,transparent 15%) 0 0/24px 24px,radial-gradient(circle,#ecac76 12%,transparent 15%) 12px 12px/24px 24px,#f5faff", align: "left", radius: 40, premium: true },
+  { id: "acquerello", name: "Acquerello rosa", description: "Pennellate sfumate rosa e crema", palette: "rose",
+    preview: "radial-gradient(ellipse at 0 40%,#dca7af,transparent 58%),radial-gradient(ellipse at 85% 95%,#eec7b8,transparent 65%),#fcf4f1", align: "center", radius: 32, premium: true },
+  { id: "monocromo", name: "Monocromo", description: "Geometrie nette e taglio contemporaneo", palette: "graphite",
+    preview: "linear-gradient(155deg,#fff 0 48%,#ced8dd 48% 50%,#e7edf0 50%)", align: "left", radius: 0, premium: true },
+  { id: "tramonto", name: "Ultima luce", description: "Sole basso, toni pesca e oro", palette: "champagne",
+    preview: "radial-gradient(circle at 73% 29%,#fff0b7 0 14%,transparent 15%),linear-gradient(165deg,#f9efdf,#e9b082,#bd786f)", align: "left", radius: 26, premium: true },
+  { id: "brina", name: "Brina", description: "Cristalli chiari su sfondo freddo", palette: "celeste",
+    preview: "repeating-conic-gradient(from 30deg at 48% 12%,#edf8ff 0 9deg,#c4deea 9deg 10deg,#f9fcff 10deg 20deg)", align: "center", radius: 14, premium: true },
+] as const;
 
 export const templates = [
   {
@@ -216,7 +250,8 @@ export const templates = [
     rsvpVariants: ["RSVP accredito", "Conferma business", "Messaggio evento"],
     preview: "linear-gradient(135deg,#f7f8f8,#365f6b 55%,#b35f42)",
     premium: true
-  }
+  },
+  ...additionalTemplates
 ] as const;
 
 export const smartCopy: Record<EventType, {

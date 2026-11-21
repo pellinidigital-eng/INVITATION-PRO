@@ -5,7 +5,7 @@ import type React from "react";
 import { motion } from "framer-motion";
 import { CalendarPlus, Clock3, MapPin, MessageCircle, QrCode, Shirt, Sparkles } from "lucide-react";
 import { buildInviteCopy } from "@/lib/copy-engine";
-import { Invitation, palettes, planFeatures, ProductPlan, templates } from "@/lib/invitation-data";
+import { additionalTemplates, Invitation, palettes, planFeatures, ProductPlan, templates } from "@/lib/invitation-data";
 
 type Props = {
   invitation: Invitation;
@@ -29,7 +29,10 @@ export function TemplateStage({ invitation, compact = false, plan = "premium", s
   const palette = palettes[invitation.palette as keyof typeof palettes] ?? palettes.champagne;
   const copy = buildInviteCopy(invitation);
   const template = templates.find((item) => item.id === invitation.template) ?? templates[0];
-  const templateStyle = templateStyles[invitation.template] ?? templateStyles.lumiere;
+  const extra = additionalTemplates.find((item) => item.id === invitation.template);
+  const templateStyle = extra
+    ? { align: extra.align === "center" ? "items-center text-center" : "items-start text-left", frame: "max-w-3xl", radius: "", rule: true }
+    : templateStyles[invitation.template as keyof typeof templateStyles] ?? templateStyles.lumiere;
   const features = planFeatures[plan];
   const dateValue = invitation.date ? new Date(invitation.date) : undefined;
   const validDate = dateValue && Number.isFinite(dateValue.getTime());
@@ -67,7 +70,7 @@ export function TemplateStage({ invitation, compact = false, plan = "premium", s
         >
           <div
             className={`w-full border ${templateStyle.radius} ${compact ? "px-5 py-7" : "px-5 py-8 sm:px-10 sm:py-11"} shadow-[0_24px_80px_rgba(15,20,30,.12)] backdrop-blur-xl`}
-            style={{ background: surface, borderColor: `${palette.accent}30` }}
+            style={{ background: surface, borderRadius: extra?.radius, borderColor: `${palette.accent}30` }}
           >
             <div className={`flex flex-wrap items-center gap-3 ${templateStyle.align.includes("center") ? "justify-center" : "justify-between"}`}>
               {compact && (
@@ -93,8 +96,12 @@ export function TemplateStage({ invitation, compact = false, plan = "premium", s
             </h1>
 
             <p className={`${compact ? "mt-5 text-sm leading-6" : "mt-6 text-base leading-8 sm:text-lg"} mx-auto max-w-2xl opacity-76`}>
-              {invitation.description || copy.opening}
+              {copy.writingOpening ?? (invitation.description || copy.opening)}
             </p>
+
+            {copy.writingOpening && invitation.description && (
+              <p className="mt-3 max-w-2xl whitespace-pre-wrap break-words leading-relaxed opacity-75">{invitation.description}</p>
+            )}
 
             {!compact && (
               <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -166,6 +173,7 @@ export function TemplateStage({ invitation, compact = false, plan = "premium", s
 }
 
 function HeroBackground({ invitation, palette, image }: { invitation: Invitation; palette: Palette; image?: string }) {
+  const model = additionalTemplates.find((item) => item.id === invitation.template);
   const isCinema = invitation.template === "cinema";
   const imageOverlay = isCinema
     ? "linear-gradient(180deg, rgba(7,8,10,.30), rgba(7,8,10,.78))"
@@ -178,7 +186,7 @@ function HeroBackground({ invitation, palette, image }: { invitation: Invitation
         <div
           className="absolute inset-0"
           style={{
-            background: `linear-gradient(145deg, ${palette.bg}, ${palette.soft} 56%, ${palette.bg})`
+            background: model?.preview ?? `linear-gradient(145deg, ${palette.bg}, ${palette.soft} 56%, ${palette.bg})`
           }}
         />
       )}

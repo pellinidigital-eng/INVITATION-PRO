@@ -43,6 +43,8 @@ import { encodeInvitation } from "@/lib/share";
 import { invitationStatus, normalizeInvitation } from "@/lib/invitation-utils";
 import { TemplateStage } from "@/components/TemplateStage";
 
+import { writingStyles, WritingStyle } from "@/lib/writing-styles";
+
 const styleOptions = Object.keys(styleRules);
 const fontOptions = ["Editorial serif", "Modern grotesk", "Classic roman", "Soft rounded"];
 const IS_TEST_MODE = true;
@@ -458,6 +460,15 @@ export function StudioApp() {
               <Field label="WhatsApp RSVP" value={active.whatsapp} onChange={(value) => update({ whatsapp: value.replace(/[^\d+]/g, "").replace(/(?!^)\+/g, "").slice(0, 16) })} />
             </div>
             <label className="mt-3 block text-sm font-medium">
+              Stile di scrittura
+              <select value={active.writingStyle ?? ""} onChange={(event) => update({ writingStyle: (event.target.value || undefined) as WritingStyle | undefined })} className="mt-2 block w-full rounded-2xl border border-black/10 bg-white p-3 text-base">
+                <option value="">Automatico in base all’evento</option>
+                {Object.entries(writingStyles).map(([id, style]) => <option key={id} value={id}>{style.label}</option>)}
+              </select>
+            </label>
+            {generatedCopy.writingOpening && <p className="mt-2 text-sm text-black/65">{generatedCopy.writingOpening}</p>}
+
+            <label className="mt-3 block text-sm font-medium">
               Descrizione intelligente
               <textarea value={active.description} maxLength={620} onChange={(event) => update({ description: event.target.value })} className="mt-2 min-h-28 w-full rounded-2xl border border-black/10 bg-white p-4 leading-7 outline-none focus:border-black/40" />
             </label>
@@ -489,20 +500,17 @@ export function StudioApp() {
             </div>
           </Panel>
 
-          <Panel title="Template premium" icon={<Play size={17} />}>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <Panel title="Modelli grafici" icon={<Play size={17} />}>
+            <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
               {templates.map((template) => {
                 const locked = !features.templates.includes(template.id);
                 return (
-                <button key={template.id} onClick={() => locked ? setNotice("Template premium: passa a Premium per usarlo senza limiti.") : update({ template: template.id as TemplateId, palette: template.palette })} className={`group overflow-hidden rounded-[24px] border bg-white p-3 text-left transition hover:-translate-y-0.5 ${active.template === template.id ? "border-black shadow-soft-xl" : "border-black/10 hover:border-black/30"} ${locked ? "opacity-60" : ""}`}>
-                  <div className="relative h-36 rounded-2xl" style={{ background: template.preview }}>
+                <button key={template.id} aria-pressed={active.template === template.id} onClick={() => locked ? setNotice("Template premium: passa a Premium per usarlo senza limiti.") : update({ template: template.id as TemplateId, palette: template.palette })} className={`group overflow-hidden rounded-[24px] border bg-white p-3 text-left transition hover:-translate-y-0.5 ${active.template === template.id ? "border-black shadow-soft-xl" : "border-black/10 hover:border-black/30"} ${locked ? "opacity-60" : ""}`}>
+                  <div className="relative h-14 rounded-xl sm:h-20" style={{ background: template.preview }}>
                     {locked && <span className="absolute right-3 top-3 rounded-full bg-black px-3 py-1 text-[11px] font-semibold text-white">Premium</span>}
                   </div>
                   <div className="mt-3 text-sm font-semibold">{template.name}</div>
                   <div className="mt-1 text-xs leading-5 text-black/52">{template.description}</div>
-                  <div className="mt-3 flex flex-wrap gap-1">
-                    {template.animations.slice(0, 2).map((animation) => <span key={animation} className="rounded-full bg-black/[.05] px-2 py-1 text-[10px] text-black/55">{animation}</span>)}
-                  </div>
                 </button>
               );})}
             </div>
