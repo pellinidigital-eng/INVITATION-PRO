@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { AnimatePresence, motion } from "framer-motion";
-import { CalendarPlus, Download, MessageCircle, QrCode, Share2, Volume2 } from "lucide-react";
-import { buildInviteCopy } from "@/lib/copy-engine";
+import { Download, MessageCircle, QrCode, Volume2 } from "lucide-react";
 import { defaultInvitation, Invitation, palettes, planFeatures, ProductPlan } from "@/lib/invitation-data";
 import { decodeInvitation, encodeInvitation } from "@/lib/share";
 import { findInvitation, isDeletedSlug, saveInvitation } from "@/lib/storage";
@@ -26,10 +25,6 @@ export function InvitePage({ slug }: { slug: string }) {
   const [plan, setPlan] = useState<ProductPlan>("premium");
   const palette = palettes[invitation.palette as keyof typeof palettes] ?? palettes.champagne;
   const features = IS_TEST_MODE ? planFeatures.premium : planFeatures[plan];
-  const copy = buildInviteCopy(invitation);
-  const whatsappDigits = invitation.whatsapp.replace(/\D/g, "");
-  const whatsappUrl = whatsappDigits ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(copy.whatsapp)}` : "";
-
   useEffect(() => {
     const address = new URL(window.location.href);
     const fromEditor = address.searchParams.get("editor") === "1";
@@ -63,23 +58,14 @@ export function InvitePage({ slug }: { slug: string }) {
   }, [slug]);
 
   useEffect(() => {
-    if (!url) return;
+    if (!url || !editorView) return;
     QRCode.toDataURL(url, {
       errorCorrectionLevel: "M",
       margin: 2,
       width: 1100,
       color: { dark: palette.ink, light: "#ffffff" }
     }).then(setQr).catch(() => setQr(""));
-  }, [url, palette.ink]);
-
-  const calendarUrl = useMemo(() => {
-    const start = invitation.date ? invitation.date.replace(/-/g, "") : "20260918";
-    const startTime = (invitation.time || "17:00").replace(":", "").padEnd(4, "0");
-    const title = encodeURIComponent(invitation.names);
-    const details = encodeURIComponent(copy.opening);
-    const location = encodeURIComponent(invitation.place);
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}T${startTime}00/${start}T235900&details=${details}&location=${location}`;
-  }, [invitation, copy.opening]);
+  }, [url, palette.ink, editorView]);
 
   async function downloadQr() {
     if (!url) return;
@@ -122,43 +108,10 @@ export function InvitePage({ slug }: { slug: string }) {
       ) : (
       <div key="invitation">
       {invitation.music && musicOn && <audio src={invitation.music} autoPlay loop />}
-      <TemplateStage invitation={invitation} plan={plan} />
+      <TemplateStage invitation={invitation} plan={plan} showQr={editorView} />
 
-      <section className="mx-auto max-w-5xl px-5 py-16 sm:px-8">
-        <div className="grid gap-6 lg:grid-cols-[1fr_.8fr]">
-          <motion.div
-            initial={{ opacity: 0, y: 22 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="rounded-[30px] border p-6 sm:p-8"
-            style={{ borderColor: `${palette.accent}33`, background: `${palette.soft}88` }}
-          >
-            <p className="text-sm uppercase tracking-[.22em]" style={{ color: palette.accent }}>{copy.layout.note}</p>
-            <h2 className="mt-3 font-editorial text-5xl leading-none">{copy.thanks}</h2>
-            <p className="mt-5 text-lg leading-8 opacity-75">{copy.reminder}</p>
-            <p className="mt-3 text-sm leading-6 opacity-65">{copy.mediaLine}</p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              {whatsappUrl ? (
-                <a className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white" style={{ background: palette.accent }} href={whatsappUrl} target="_blank" rel="noreferrer">
-                  <MessageCircle size={17} /> {copy.rsvp}
-                </a>
-              ) : (
-                <span className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white/85" style={{ background: palette.accent }}>
-                  <MessageCircle size={17} /> WhatsApp RSVP non impostato
-                </span>
-              )}
-              <a className="inline-flex items-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold" style={{ borderColor: `${palette.accent}55` }} href={calendarUrl} target="_blank" rel="noreferrer">
-                <CalendarPlus size={17} /> Aggiungi al calendario
-              </a>
-              <button onClick={() => {
-                if (navigator.share) navigator.share({ title: invitation.names, url });
-                else navigator.clipboard?.writeText(url);
-              }} className="inline-flex items-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold" style={{ borderColor: `${palette.accent}55` }}>
-                <Share2 size={17} /> Condividi
-              </button>
-            </div>
-          </motion.div>
-
+      <section className="mx-auto max-w-5xl px-5 pb-10 sm:px-8">
+        {editorView && (
           <motion.div id="qr-section" initial={{ opacity: 0, y: 22 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="overflow-hidden rounded-[30px] border" style={{ borderColor: `${palette.accent}33`, background: `${palette.bg}cc` }}>
             <div className="flex items-center justify-between">
               <div className="p-6 pb-3">
@@ -186,15 +139,17 @@ export function InvitePage({ slug }: { slug: string }) {
               </div>
             </div>
           </motion.div>
-        </div>
+        )}
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-3">
+        {invitation.images.length > 0 && (
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
           {(invitation.images.length ? invitation.images : []).map((image, index) => (
             <motion.img
               key={image.slice(0, 80) + index}
               className="h-72 w-full rounded-[28px] object-cover shadow-soft-xl"
               src={image}
               alt=""
+              onError={(event) => { event.currentTarget.style.display = "none"; }}
               initial={{ opacity: 0, y: 22 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -202,6 +157,8 @@ export function InvitePage({ slug }: { slug: string }) {
             />
           ))}
         </div>
+
+        )}
 
         {invitation.video && (
           <div className="mt-10 overflow-hidden rounded-[30px] border" style={{ borderColor: `${palette.accent}33` }}>

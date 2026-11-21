@@ -10,6 +10,7 @@ import { Invitation, palettes, planFeatures, ProductPlan, templates } from "@/li
 type Props = {
   invitation: Invitation;
   compact?: boolean;
+  showQr?: boolean;
   plan?: ProductPlan;
 };
 
@@ -24,7 +25,7 @@ const templateStyles = {
   executive: { align: "items-start text-left", frame: "max-w-4xl", radius: "rounded-[24px]", rule: true }
 } as const;
 
-export function TemplateStage({ invitation, compact = false, plan = "premium" }: Props) {
+export function TemplateStage({ invitation, compact = false, plan = "premium", showQr = false }: Props) {
   const palette = palettes[invitation.palette as keyof typeof palettes] ?? palettes.champagne;
   const copy = buildInviteCopy(invitation);
   const template = templates.find((item) => item.id === invitation.template) ?? templates[0];
@@ -69,10 +70,12 @@ export function TemplateStage({ invitation, compact = false, plan = "premium" }:
             style={{ background: surface, borderColor: `${palette.accent}30` }}
           >
             <div className={`flex flex-wrap items-center gap-3 ${templateStyle.align.includes("center") ? "justify-center" : "justify-between"}`}>
+              {compact && (
               <span className="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[11px] font-semibold uppercase tracking-[.16em]" style={{ borderColor: `${palette.accent}40`, color: palette.accent, background: softSurface }}>
                 <Sparkles size={13} />
                 {template.name}
               </span>
+              )}
               {!compact && <span className="text-xs font-medium uppercase tracking-[.18em] opacity-55">{invitation.eventType.replace("-", " ")}</span>}
             </div>
 
@@ -90,28 +93,26 @@ export function TemplateStage({ invitation, compact = false, plan = "premium" }:
             </h1>
 
             <p className={`${compact ? "mt-5 text-sm leading-6" : "mt-6 text-base leading-8 sm:text-lg"} mx-auto max-w-2xl opacity-76`}>
-              {copy.opening}
+              {invitation.description || copy.opening}
             </p>
 
             {!compact && (
               <div className="mt-8 flex flex-wrap justify-center gap-3">
                 {whatsappUrl ? (
                   <a className="inline-flex min-h-12 items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_34px_rgba(0,0,0,.14)]" style={{ background: palette.accent }} href={whatsappUrl} target="_blank" rel="noreferrer">
-                    <MessageCircle size={17} /> {copy.rsvp}
+                    <MessageCircle size={17} /> Conferma la presenza
                   </a>
-                ) : (
-                  <span className="inline-flex min-h-12 items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white/85" style={{ background: palette.accent }}>
-                    <MessageCircle size={17} /> WhatsApp RSVP non impostato
-                  </span>
-                )}
+                ) : null}
                 {calendarUrl && (
                   <a className="inline-flex min-h-12 items-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold backdrop-blur-xl" style={{ borderColor: `${palette.accent}45`, background: softSurface }} href={calendarUrl} target="_blank" rel="noreferrer">
                     <CalendarPlus size={17} /> Aggiungi al calendario
                   </a>
                 )}
+                {showQr && (
                 <a className="inline-flex min-h-12 items-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold backdrop-blur-xl" style={{ borderColor: `${palette.accent}45`, background: softSurface }} href="#qr-section">
                   <QrCode size={17} /> QR automatico
                 </a>
+                )}
               </div>
             )}
           </div>
@@ -138,30 +139,7 @@ export function TemplateStage({ invitation, compact = false, plan = "premium" }:
       )}
 
       {!compact && (
-        <section className="relative z-10 mx-auto grid max-w-5xl gap-5 px-5 pb-16 sm:px-8 lg:grid-cols-[1.1fr_.9fr]">
-          <div className="rounded-[28px] border p-6 sm:p-8" style={{ borderColor: `${palette.accent}28`, background: surface }}>
-            <p className="text-xs font-semibold uppercase tracking-[.2em] opacity-55">{copy.layout.note}</p>
-            <h2 className="mt-3 font-editorial text-4xl leading-tight sm:text-5xl">{copy.detailsTitle}</h2>
-            <p className="mt-4 max-w-2xl text-base leading-7 opacity-72">{copy.emotional}</p>
-            <div className="mt-7 space-y-3">
-              {copy.timeline.slice(0, 4).map((item, index) => (
-                <motion.div
-                  key={`${item}-${index}`}
-                  className="flex items-center gap-4 rounded-2xl border px-4 py-3"
-                  style={{ borderColor: `${palette.accent}22`, background: softSurface }}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.04 }}
-                >
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-semibold text-white" style={{ background: palette.accent }}>{index + 1}</span>
-                  <span className="text-sm font-medium sm:text-base">{item}</span>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-5">
+        <section className="relative z-10 mx-auto grid max-w-5xl grid-cols-1 gap-5 px-5 pb-8 sm:px-8 lg:grid-cols-2">
             <div className="rounded-[28px] border p-6" style={{ borderColor: `${palette.accent}28`, background: surface }}>
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.18em]" style={{ color: palette.accent }}><MapPin size={15} /> Location</div>
               <div className="mt-3 text-balance text-2xl font-semibold leading-tight">{invitation.place || "Location da definire"}</div>
@@ -180,9 +158,7 @@ export function TemplateStage({ invitation, compact = false, plan = "premium" }:
             <div className="rounded-[28px] border p-6" style={{ borderColor: `${palette.accent}28`, background: surface }}>
               <div className="text-xs font-semibold uppercase tracking-[.18em]" style={{ color: palette.accent }}>{copy.countdown}</div>
               <Countdown date={invitation.date} time={invitation.time} palette={palette} />
-              <p className="mt-5 text-sm leading-6 opacity-65">{copy.musicLine}</p>
             </div>
-          </div>
         </section>
       )}
     </section>
