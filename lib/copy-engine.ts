@@ -1,4 +1,6 @@
-import { EventType, Invitation, TemplateId } from "@/lib/invitation-data";
+import { EventType, Invitation } from "@/lib/invitation-data";
+
+import { writingStyles } from "@/lib/writing-styles";
 
 type EventCopyPack = {
   titles: string[];
@@ -57,6 +59,20 @@ const packs: Record<EventType, EventCopyPack> = {
     countdown: ["Verso la celebrazione", "Manca poco a un giorno tenero", "Countdown di famiglia"],
     sections: [["Cerimonia", "Pranzo", "Confetti", "Foto"], ["Rito", "Famiglia", "Tavola", "Bomboniere"], ["Chiesa", "Accoglienza", "Pranzo", "Saluti"]],
     timelines: [["Cerimonia", "Foto famiglia", "Pranzo", "Confetti", "Saluti"], ["Rito", "Accoglienza", "Tavola", "Dolci", "Ringraziamenti"], ["Arrivo", "Celebrazione", "Foto", "Pranzo", "Bomboniere"]]
+  },
+  comunione: {
+    titles: ["La mia Prima Comunione", "Un giorno di gioia", "Insieme per la Prima Comunione"],
+    subtitles: ["Una celebrazione da condividere con le persone care."],
+    openings: ["Con gioia ti invitiamo a condividere il giorno della Prima Comunione."],
+    emotional: ["La tua presenza renderà questa giornata ancora più speciale."],
+    detailsTitles: ["La celebrazione"],
+    rsvp: ["Conferma la presenza"],
+    whatsapp: ["Ciao, confermo la mia presenza alla Prima Comunione."],
+    reminders: ["Segna la data della Prima Comunione."],
+    thanks: ["Grazie per aver condiviso questa giornata con noi."],
+    countdown: ["Manca poco alla Prima Comunione"],
+    sections: [["Celebrazione"]],
+    timelines: [["Celebrazione"]]
   },
   "baby-shower": {
     titles: ["Un piccolo arrivo, tanta meraviglia", "La festa della dolce attesa", "Una sorpresa piena di tenerezza", "Piccole cose, grande gioia", "Un party per accogliere il futuro", "La dolce attesa prende forma", "Una festa morbida e luminosa", "Benvenuta attesa"],
@@ -125,7 +141,7 @@ const styleModifiers: Record<string, string[]> = {
   business: ["con precisione editoriale", "con ritmo professionale e pulito", "con un taglio chiaro e orientato al valore"]
 };
 
-const templateLayouts: Record<TemplateId, { order: string[]; note: string }> = {
+const templateLayouts: Record<string, { order: string[]; note: string }> = {
   lumiere: { order: ["hero", "details", "timeline", "qr"], note: "Apertura editoriale e dettagli da cerimonia." },
   botanica: { order: ["hero", "story", "timeline", "map"], note: "Respiro naturale, sezioni ariose e ritmo gentile." },
   cinema: { order: ["hero", "countdown", "details", "qr"], note: "Reveal scenografico, CTA forti e ritmo serale." },
@@ -135,6 +151,7 @@ const templateLayouts: Record<TemplateId, { order: string[]; note: string }> = {
 };
 
 export function buildInviteCopy(invitation: Invitation) {
+  const writing = invitation.writingStyle ? writingStyles[invitation.writingStyle] : undefined;
   const pack = packs[invitation.eventType] ?? packs.matrimonio;
   const seed = hash([
     invitation.eventType,
@@ -159,8 +176,9 @@ export function buildInviteCopy(invitation: Invitation) {
   const userHint = rewriteDescription(invitation.description, pack, seed);
 
   return {
-    title: pick(pack.titles, seed),
+    title: writing?.title ?? pick(pack.titles, seed),
     subtitle: `${pick(pack.subtitles, seed + 1)} ${modifier}.`,
+    writingOpening: writing?.opening,
     opening: userHint ? `${pick(pack.openings, seed + 2)} ${userHint}` : pick(pack.openings, seed + 2),
     emotional: pick(pack.emotional, seed + 3),
     detailsTitle: pick(pack.detailsTitles, seed + 4),

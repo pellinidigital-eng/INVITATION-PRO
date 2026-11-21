@@ -12,6 +12,7 @@ export type EventType =
   | "matrimonio"
   | "compleanno"
   | "battesimo"
+  | "comunione"
   | "baby-shower"
   | "laurea"
   | "anniversario"
@@ -23,7 +24,32 @@ export type TemplateId =
   | "cinema"
   | "atelier"
   | "playful"
-  | "executive";
+  | "executive"
+  | "letterpress"
+  | "costiera"
+  | "terracotta"
+  | "erbario"
+  | "artdeco"
+  | "confetti"
+  | "acquerello"
+  | "monocromo"
+  | "tramonto"
+  | "brina"
+  | "ulivo"
+  | "nozze-perla"
+  | "gardenia"
+  | "nuvola-celeste"
+  | "piccola-stella"
+  | "fiocco-rosa"
+  | "spighe"
+  | "luce-chiara"
+  | "rametto-salvia"
+  | "festa-pop"
+  | "candeline"
+  | "notte-neon"
+  | "arcobaleno"
+  | "buonanotte"
+  | "orsetti";
 
 export type Invitation = {
   id: string;
@@ -35,12 +61,15 @@ export type Invitation = {
   time: string;
   place: string;
   description: string;
+  story?: string;
+  opening?: "direct" | "envelope" | "balloon";
   dressCode: string;
   whatsapp: string;
   palette: string;
   font: string;
   style: string;
   tone: string;
+  writingStyle?: import("./writing-styles").WritingStyle;
   images: string[];
   logo?: string;
   video?: string;
@@ -55,6 +84,7 @@ export const eventTypes = [
   { id: "matrimonio", label: "Matrimonio", icon: Heart },
   { id: "compleanno", label: "Compleanno", icon: Cake },
   { id: "battesimo", label: "Battesimo", icon: Sparkles },
+  { id: "comunione", label: "Comunione", icon: Sparkles },
   { id: "baby-shower", label: "Baby shower", icon: Baby },
   { id: "laurea", label: "Laurea", icon: GraduationCap },
   { id: "anniversario", label: "Anniversario", icon: Gem },
@@ -111,6 +141,59 @@ export const palettes = {
     accent2: "#b35f42"
   }
 };
+
+export const additionalTemplates = [
+  { id: "letterpress", name: "Carta e inchiostro", description: "Carta avorio, righe sottili e bordo tipografico", palette: "champagne",
+    preview: "repeating-linear-gradient(0deg,#eadfcb 0 1px,#fbf7ed 1px 8px)", align: "center", radius: 8, premium: true },
+  { id: "costiera", name: "Costiera", description: "Fasce azzurre e composizione luminosa", palette: "celeste",
+    preview: "repeating-linear-gradient(125deg,#9ec7db 0 16px,#eff8fd 16px 44px)", align: "center", radius: 24, premium: true },
+  { id: "terracotta", name: "Terra di Siena", description: "Archi caldi e dettagli color terracotta", palette: "rose",
+    preview: "radial-gradient(ellipse at 50% 20%,#faebdd 35%,#c97f63 36% 63%,#f5ded0 64%)", align: "center", radius: 52, premium: true },
+  { id: "erbario", name: "Erbario", description: "Toni salvia e cerchi sovrapposti", palette: "emerald",
+    preview: "radial-gradient(circle at 10% 15%,#adc5a7 0 20%,transparent 21%),radial-gradient(circle at 90% 85%,#759681 0 22%,#edf4e9 23%)", align: "left", radius: 18, premium: true },
+  { id: "artdeco", name: "Notte Déco", description: "Oro a ventaglio su fondo scuro", palette: "noir",
+    preview: "repeating-conic-gradient(from 12deg at 50% 85%,#17191d 0 11deg,#b39454 11deg 12deg,#24252a 12deg 24deg)", align: "center", radius: 4, premium: true },
+  { id: "confetti", name: "Confetti Pop", description: "Motivo a pois e bordi arrotondati", palette: "celeste",
+    preview: "radial-gradient(circle,#629ec1 12%,transparent 15%) 0 0/24px 24px,radial-gradient(circle,#ecac76 12%,transparent 15%) 12px 12px/24px 24px,#f5faff", align: "left", radius: 40, premium: true },
+  { id: "acquerello", name: "Acquerello rosa", description: "Pennellate sfumate rosa e crema", palette: "rose",
+    preview: "radial-gradient(ellipse at 0 40%,#dca7af,transparent 58%),radial-gradient(ellipse at 85% 95%,#eec7b8,transparent 65%),#fcf4f1", align: "center", radius: 32, premium: true },
+  { id: "monocromo", name: "Monocromo", description: "Geometrie nette e taglio contemporaneo", palette: "graphite",
+    preview: "linear-gradient(155deg,#fff 0 48%,#ced8dd 48% 50%,#e7edf0 50%)", align: "left", radius: 0, premium: true },
+  { id: "tramonto", name: "Ultima luce", description: "Sole basso, toni pesca e oro", palette: "champagne",
+    preview: "radial-gradient(circle at 73% 29%,#fff0b7 0 14%,transparent 15%),linear-gradient(165deg,#f9efdf,#e9b082,#bd786f)", align: "left", radius: 26, premium: true },
+  { id: "brina", name: "Brina", description: "Cristalli chiari su sfondo freddo", palette: "celeste",
+    preview: "repeating-conic-gradient(from 30deg at 48% 12%,#edf8ff 0 9deg,#c4deea 9deg 10deg,#f9fcff 10deg 20deg)", align: "center", radius: 14, premium: true },
+  { id: "ulivo", name: "Rami d’ulivo", description: "Salvia e avorio", palette: "emerald",
+    preview: "radial-gradient(ellipse at top left,#a9bf92,transparent 58%),radial-gradient(ellipse at bottom right,#77956e,#f5f2df 70%)", align: "center", radius: 26, premium: false, event: "matrimonio" },
+  { id: "nozze-perla", name: "Nozze di perla", description: "Riflessi madreperla e oro", palette: "champagne",
+    preview: "conic-gradient(from 45deg,#f4e4c9,#fffdfa,#c7b596,#fbf4ec,#f4e4c9)", align: "center", radius: 40, premium: true, event: "matrimonio" },
+  { id: "gardenia", name: "Gardenia", description: "Petali avorio su rosa antico", palette: "rose",
+    preview: "radial-gradient(ellipse at 16% 20%,#fff7eb 10%,transparent 41%),radial-gradient(ellipse at 89% 89%,#f7e6ce 15%,#ac687e 72%)", align: "left", radius: 12, premium: true, event: "matrimonio" },
+  { id: "nuvola-celeste", name: "Nuvola celeste", description: "Nuvole bianche in un cielo chiaro", palette: "celeste",
+    preview: "radial-gradient(ellipse at 15% 75%,white 15%,transparent 35%),radial-gradient(ellipse at 85% 60%,white 10%,transparent 32%),#afd4e8", align: "center", radius: 26, premium: false, event: "battesimo" },
+  { id: "piccola-stella", name: "Piccola stella", description: "Luce dorata e toni panna", palette: "champagne",
+    preview: "repeating-conic-gradient(from 7deg at 25% 20%,#ebcb90 0 6deg,#fdf5df 6deg 21deg)", align: "center", radius: 40, premium: true, event: "battesimo" },
+  { id: "fiocco-rosa", name: "Fiocco rosa", description: "Nastri rosa e carta delicata", palette: "rose",
+    preview: "repeating-linear-gradient(42deg,#fff1f3 0 32px,#dfa5ba 32px 38px,#f5d8df 38px 46px)", align: "left", radius: 12, premium: true, event: "battesimo" },
+  { id: "spighe", name: "Spighe dorate", description: "Avorio e piccoli tratti dorati", palette: "champagne",
+    preview: "repeating-linear-gradient(115deg,#faf1db 0 10px,#d2ab63 10px 12px,#f5e7cb 12px 27px)", align: "center", radius: 26, premium: false, event: "comunione" },
+  { id: "luce-chiara", name: "Luce chiara", description: "Vetrata chiara nei toni azzurri", palette: "celeste",
+    preview: "conic-gradient(from 32deg at 60% 20%,#b6d5df,#fffaf2,#87b0c1,#ece0b3,#b6d5df)", align: "center", radius: 40, premium: true, event: "comunione" },
+  { id: "rametto-salvia", name: "Rametto di salvia", description: "Verde tenue e forme a foglia", palette: "emerald",
+    preview: "radial-gradient(ellipse at 0 40%,#9cab83 18%,transparent 44%),radial-gradient(ellipse at 100% 65%,#7e9b7a 12%,#edf2dc 53%)", align: "left", radius: 12, premium: true, event: "comunione" },
+  { id: "festa-pop", name: "Festa Pop", description: "Righe vivaci e contrasti colorati", palette: "celeste",
+    preview: "repeating-linear-gradient(145deg,#80cbd0 0 17px,#fff5c5 17px 34px,#e99fbb 34px 51px)", align: "center", radius: 26, premium: false, event: "compleanno" },
+  { id: "candeline", name: "Candeline", description: "Fiammelle e colori da pasticceria", palette: "rose",
+    preview: "radial-gradient(ellipse,#f7a15d 13%,transparent 16%) 0 0/23px 36px,#fbd7e2", align: "center", radius: 40, premium: true, event: "compleanno" },
+  { id: "notte-neon", name: "Notte neon", description: "Luci viola e blu elettrico", palette: "noir",
+    preview: "radial-gradient(ellipse at 5% 5%,#7444b1,transparent 55%),radial-gradient(ellipse at 90% 95%,#236687,#15141e 60%)", align: "left", radius: 12, premium: true, event: "compleanno" },
+  { id: "arcobaleno", name: "Piccolo arcobaleno", description: "Archi color pesca, salvia e crema", palette: "champagne",
+    preview: "radial-gradient(ellipse at 50% 100%,#fff5dd 0 24%,#e7b3ab 25% 37%,#c4d1ae 38% 51%,#f5cf9a 52% 64%,#fff0de 65%)", align: "center", radius: 26, premium: false, event: "baby-shower" },
+  { id: "buonanotte", name: "Buonanotte luna", description: "Luna chiara su fondo lavanda", palette: "celeste",
+    preview: "radial-gradient(circle at 75% 27%,#fff5cd 0 12%,transparent 13%),linear-gradient(145deg,#d6c6ee,#b9d7e8)", align: "center", radius: 40, premium: true, event: "baby-shower" },
+  { id: "orsetti", name: "Orsetti e miele", description: "Cerchi morbidi nei toni miele", palette: "champagne",
+    preview: "radial-gradient(circle at 20% 25%,#d8ac79 0 13%,transparent 14%),radial-gradient(circle at 80% 30%,#c89768 0 16%,#f6e0b8 17%)", align: "left", radius: 12, premium: true, event: "baby-shower" },
+] as const;
 
 export const templates = [
   {
@@ -214,7 +297,8 @@ export const templates = [
     rsvpVariants: ["RSVP accredito", "Conferma business", "Messaggio evento"],
     preview: "linear-gradient(135deg,#f7f8f8,#365f6b 55%,#b35f42)",
     premium: true
-  }
+  },
+  ...additionalTemplates
 ] as const;
 
 export const smartCopy: Record<EventType, {
@@ -273,6 +357,18 @@ export const smartCopy: Record<EventType, {
     ctas: ["Conferma con affetto", "Partecipo", "Rispondi alla famiglia"],
     sections: ["Cerimonia", "Pranzo", "Confetti", "Foto famiglia"],
     timeline: ["Cerimonia", "Foto famiglia", "Pranzo", "Confetti", "Saluti"]
+  },
+  comunione: {
+    title: "La mia Prima Comunione",
+    intro: ["Con gioia ti invitiamo a condividere il giorno della Prima Comunione."],
+    detailsTitle: "La celebrazione",
+    rsvp: "Conferma la presenza",
+    whatsapp: "Ciao, confermo la mia presenza alla Prima Comunione.",
+    thanks: "Grazie per aver condiviso questa giornata con noi.",
+    reminder: "Segna la data della Prima Comunione.",
+    ctas: ["Conferma la presenza"],
+    sections: ["Celebrazione", "Famiglia"],
+    timeline: ["Celebrazione"]
   },
   "baby-shower": {
     title: "Un piccolo grande arrivo",
@@ -425,14 +521,14 @@ export const demoInvitations: Invitation[] = [
 ];
 
 function demoImage(label: string, bg: string, accent: string, accent2: string) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1600"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="${bg}"/><stop offset=".58" stop-color="${accent}" stop-opacity=".72"/><stop offset="1" stop-color="${accent2}"/></linearGradient><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter></defs><rect width="1200" height="1600" fill="url(#g)"/><rect width="1200" height="1600" fill="#fff" opacity=".16" filter="url(#n)"/><circle cx="920" cy="280" r="190" fill="#fff" opacity=".22"/><circle cx="250" cy="1280" r="240" fill="#fff" opacity=".16"/><path d="M160 1040c180-260 360-330 545-210 122 79 226 82 335 8" fill="none" stroke="#fff" stroke-width="22" opacity=".35" stroke-linecap="round"/><text x="90" y="190" font-family="Georgia,serif" font-size="88" fill="#15151b" opacity=".82">${label}</text><text x="92" y="270" font-family="Arial,sans-serif" font-size="28" letter-spacing="8" fill="#15151b" opacity=".52">PREMIUM EVENT VISUAL</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1600"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="${bg}"/><stop offset=".58" stop-color="${accent}" stop-opacity=".72"/><stop offset="1" stop-color="${accent2}"/></linearGradient><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter></defs><rect width="1200" height="1600" fill="url(#g)"/><rect width="1200" height="1600" fill="#fff" opacity=".16" filter="url(#n)"/><circle cx="920" cy="280" r="190" fill="#fff" opacity=".22"/><circle cx="250" cy="1280" r="240" fill="#fff" opacity=".16"/><path d="M160 1040c180-260 360-330 545-210 122 79 226 82 335 8" fill="none" stroke="#fff" stroke-width="22" opacity=".35" stroke-linecap="round"/><text x="90" y="190" font-family="Georgia,serif" font-size="88" fill="#15151b" opacity=".82">${label.replace(/&/g, "&amp;")}</text><text x="92" y="270" font-family="Arial,sans-serif" font-size="28" letter-spacing="8" fill="#15151b" opacity=".52">PREMIUM EVENT VISUAL</text></svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
 export const planFeatures = {
   free: {
     label: "Demo",
-    templates: ["lumiere", "botanica", "playful"],
+    templates: templates.filter((item) => !item.premium).map((item) => item.id),
     watermark: true,
     qrDownload: false,
     exportFiles: false,
@@ -467,12 +563,44 @@ export const styleRules: Record<string, { palette: keyof typeof palettes; tone: 
   "business": { palette: "graphite", tone: "Professionale", template: "executive" }
 };
 
+const eventRecommendations = {
+  matrimonio: { template: "ulivo", writingStyle: "poetico", style: "elegante" },
+  compleanno: { template: "festa-pop", writingStyle: "festoso", style: "cartoon" },
+  battesimo: { template: "nuvola-celeste", writingStyle: "affettuoso", style: "botanico" },
+  comunione: { template: "spighe", writingStyle: "solenne", style: "elegante" },
+  "baby-shower": { template: "arcobaleno", writingStyle: "confidenziale", style: "cartoon" },
+  laurea: { template: "lumiere", writingStyle: "festoso", style: "elegante" },
+  anniversario: { template: "ulivo", writingStyle: "narrativo", style: "romantico" },
+  business: { template: "executive", demoTemplate: "lumiere", writingStyle: "formale", style: "business" }
+} satisfies Record<EventType, {
+  template: TemplateId;
+  demoTemplate?: TemplateId;
+  writingStyle: import("./writing-styles").WritingStyle;
+  style: string;
+}>;
+
+export function getEventRecommendation(eventType: EventType, plan: ProductPlan) {
+  const recommendation = eventRecommendations[eventType];
+  const templateId = plan === "free" && "demoTemplate" in recommendation
+    ? recommendation.demoTemplate
+    : recommendation.template;
+  const model = templates.find((item) => item.id === templateId) ?? templates[0];
+  return {
+    ...recommendation,
+    template: model.id,
+    templateName: model.name,
+    palette: model.palette,
+    tone: styleRules[recommendation.style].tone
+  };
+}
+
 export function getSmartSuggestion(eventType: EventType, style: string) {
   const copy = smartCopy[eventType];
   const rule = styleRules[style.toLowerCase()] ?? styleRules.elegante;
+  const model = eventType === "comunione" ? additionalTemplates.find((item) => item.id === "spighe") : undefined;
   return {
-    palette: rule.palette,
-    template: eventType === "business" ? "executive" : rule.template,
+    palette: model?.palette ?? rule.palette,
+    template: model?.id ?? (eventType === "business" ? "executive" : rule.template),
     tone: rule.tone,
     description: copy.intro.join(" ")
   };

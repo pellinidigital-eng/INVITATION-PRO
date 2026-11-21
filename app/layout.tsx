@@ -1,5 +1,15 @@
 import type { Metadata } from "next";
 import type React from "react";
+import "@fontsource/playfair-display/latin-500.css";
+import "@fontsource/cormorant-garamond/latin-400.css";
+import "@fontsource/dm-sans/latin-400.css";
+import "@fontsource/nunito/latin-400.css";
+import "@fontsource/quicksand/latin-400.css";
+import "@fontsource/dancing-script/latin-400.css";
+import "@fontsource/great-vibes/latin-400.css";
+import "@fontsource/cinzel/latin-400.css";
+import "@fontsource/libre-baskerville/latin-400.css";
+import "@fontsource/caveat/latin-400.css";
 import "./globals.css";
 
 export const metadata: Metadata = {

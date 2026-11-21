@@ -8,30 +8,37 @@ const shareKeys: (keyof Invitation)[] = [
   "time",
   "place",
   "description",
+  "story",
+  "opening",
   "dressCode",
   "whatsapp",
   "palette",
   "font",
   "style",
-  "tone"
+  "tone",
+  "writingStyle"
 ];
 
 export function encodeInvitation(invitation: Invitation) {
   const compact = shareKeys.reduce<Record<string, string>>((acc, key) => {
     const value = invitation[key];
-    if (typeof value === "string") acc[key] = key === "description" ? value.slice(0, 360) : value.slice(0, 120);
+    if (typeof value === "string") acc[key] = value.slice(0, key === "description" || key === "story" ? 360 : 120);
     return acc;
   }, {});
-  return btoa(unescape(encodeURIComponent(JSON.stringify(compact))));
+  return btoa(unescape(encodeURIComponent(JSON.stringify(compact)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 export function decodeInvitation(payload: string | null, fallback: Invitation = defaultInvitation) {
-  if (!payload) return fallback;
+  if (payload === null) return fallback;
   try {
-    const decoded = JSON.parse(decodeURIComponent(escape(atob(payload)))) as Partial<Invitation>;
+    const decoded = JSON.parse(decodeURIComponent(escape(atob(payload.replace(/-/g, "+").replace(/_/g, "/"))))) as Partial<Invitation>;
+    if (!decoded || typeof decoded.names !== "string" || !decoded.names.trim()) return undefined;
+    const fields = Object.fromEntries(shareKeys.flatMap((key) =>
+      typeof decoded[key] === "string" ? [[key, decoded[key]]] : []
+    ));
     return {
       ...fallback,
-      ...decoded,
+      ...fields,
       id: fallback.id,
       slug: fallback.slug,
       images: fallback.images ?? [],
@@ -39,6 +46,6 @@ export function decodeInvitation(payload: string | null, fallback: Invitation = 
       createdAt: fallback.createdAt
     };
   } catch {
-    return fallback;
+    return undefined;
   }
 }

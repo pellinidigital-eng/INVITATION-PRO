@@ -32,6 +32,8 @@ export function normalizeInvitation(invitation: Invitation): Invitation {
     template,
     palette,
     names: cleanText(invitation.names, defaultInvitation.names, 86),
+    story: typeof invitation.story === "string" ? invitation.story.trim().slice(0, 360) : undefined,
+    opening: invitation.opening === "envelope" || invitation.opening === "balloon" ? invitation.opening : "direct",
     date: safeDate(invitation.date),
     time: cleanText(invitation.time, defaultInvitation.time, 8),
     place: cleanText(invitation.place, defaultInvitation.place, 120),

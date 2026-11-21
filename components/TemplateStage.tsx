@@ -1,14 +1,18 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type React from "react";
 import { motion } from "framer-motion";
 import { CalendarPlus, Clock3, MapPin, MessageCircle, QrCode, Shirt, Sparkles } from "lucide-react";
 import { buildInviteCopy } from "@/lib/copy-engine";
-import { Invitation, palettes, planFeatures, ProductPlan, templates } from "@/lib/invitation-data";
+import { additionalTemplates, Invitation, palettes, planFeatures, ProductPlan, templates } from "@/lib/invitation-data";
+
+import { getInvitationFont } from "@/lib/invitation-fonts";
 
 type Props = {
   invitation: Invitation;
   compact?: boolean;
+  showQr?: boolean;
   plan?: ProductPlan;
 };
 
@@ -23,11 +27,14 @@ const templateStyles = {
   executive: { align: "items-start text-left", frame: "max-w-4xl", radius: "rounded-[24px]", rule: true }
 } as const;
 
-export function TemplateStage({ invitation, compact = false, plan = "premium" }: Props) {
+export function TemplateStage({ invitation, compact = false, plan = "premium", showQr = false }: Props) {
   const palette = palettes[invitation.palette as keyof typeof palettes] ?? palettes.champagne;
   const copy = buildInviteCopy(invitation);
   const template = templates.find((item) => item.id === invitation.template) ?? templates[0];
-  const templateStyle = templateStyles[invitation.template] ?? templateStyles.lumiere;
+  const extra = additionalTemplates.find((item) => item.id === invitation.template);
+  const templateStyle = extra
+    ? { align: extra.align === "center" ? "items-center text-center" : "items-start text-left", frame: "max-w-3xl", radius: "", rule: true }
+    : templateStyles[invitation.template as keyof typeof templateStyles] ?? templateStyles.lumiere;
   const features = planFeatures[plan];
   const dateValue = invitation.date ? new Date(invitation.date) : undefined;
   const validDate = dateValue && Number.isFinite(dateValue.getTime());
@@ -43,6 +50,8 @@ export function TemplateStage({ invitation, compact = false, plan = "premium" }:
   const whatsappUrl = whatsappDigits ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(copy.whatsapp)}` : "";
   const heroImage = invitation.images[0];
   const name = invitation.names || "Il tuo evento";
+  const font = getInvitationFont(invitation.font);
+  const headlineFont = { fontFamily: font.family, fontWeight: font.weight };
   const heroFontSize = nameFontSize(name, compact);
   const dark = palette.bg === "#101114";
   const surface = dark ? "rgba(16,17,20,.74)" : "rgba(255,255,255,.72)";
@@ -65,13 +74,15 @@ export function TemplateStage({ invitation, compact = false, plan = "premium" }:
         >
           <div
             className={`w-full border ${templateStyle.radius} ${compact ? "px-5 py-7" : "px-5 py-8 sm:px-10 sm:py-11"} shadow-[0_24px_80px_rgba(15,20,30,.12)] backdrop-blur-xl`}
-            style={{ background: surface, borderColor: `${palette.accent}30` }}
+            style={{ background: surface, borderRadius: extra?.radius, borderColor: `${palette.accent}30` }}
           >
             <div className={`flex flex-wrap items-center gap-3 ${templateStyle.align.includes("center") ? "justify-center" : "justify-between"}`}>
+              {compact && (
               <span className="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[11px] font-semibold uppercase tracking-[.16em]" style={{ borderColor: `${palette.accent}40`, color: palette.accent, background: softSurface }}>
                 <Sparkles size={13} />
                 {template.name}
               </span>
+              )}
               {!compact && <span className="text-xs font-medium uppercase tracking-[.18em] opacity-55">{invitation.eventType.replace("-", " ")}</span>}
             </div>
 
@@ -83,37 +94,46 @@ export function TemplateStage({ invitation, compact = false, plan = "premium" }:
 
             <h1
               className="mx-auto mt-4 max-w-[980px] whitespace-normal text-balance font-editorial font-medium leading-[.98] tracking-normal [hyphens:none] [overflow-wrap:break-word] [word-break:normal]"
-              style={{ fontSize: heroFontSize }}
+              style={{ ...headlineFont, fontSize: heroFontSize }}
             >
               {name}
             </h1>
 
             <p className={`${compact ? "mt-5 text-sm leading-6" : "mt-6 text-base leading-8 sm:text-lg"} mx-auto max-w-2xl opacity-76`}>
-              {copy.opening}
+              {copy.writingOpening ?? (invitation.description || copy.opening)}
             </p>
+
+            {copy.writingOpening && invitation.description && (
+              <p className="mt-3 max-w-2xl whitespace-pre-wrap break-words leading-relaxed opacity-75">{invitation.description}</p>
+            )}
 
             {!compact && (
               <div className="mt-8 flex flex-wrap justify-center gap-3">
                 {whatsappUrl ? (
                   <a className="inline-flex min-h-12 items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_34px_rgba(0,0,0,.14)]" style={{ background: palette.accent }} href={whatsappUrl} target="_blank" rel="noreferrer">
-                    <MessageCircle size={17} /> {copy.rsvp}
+                    <MessageCircle size={17} /> Conferma la presenza
                   </a>
-                ) : (
-                  <span className="inline-flex min-h-12 items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white/85" style={{ background: palette.accent }}>
-                    <MessageCircle size={17} /> WhatsApp RSVP non impostato
-                  </span>
-                )}
+                ) : null}
                 {calendarUrl && (
                   <a className="inline-flex min-h-12 items-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold backdrop-blur-xl" style={{ borderColor: `${palette.accent}45`, background: softSurface }} href={calendarUrl} target="_blank" rel="noreferrer">
                     <CalendarPlus size={17} /> Aggiungi al calendario
                   </a>
                 )}
+                {showQr && (
                 <a className="inline-flex min-h-12 items-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold backdrop-blur-xl" style={{ borderColor: `${palette.accent}45`, background: softSurface }} href="#qr-section">
                   <QrCode size={17} /> QR automatico
                 </a>
+                )}
               </div>
             )}
           </div>
+
+          {invitation.story && (
+            <section className="mt-4 w-full rounded-[24px] border p-5" style={{ borderColor: `${palette.accent}28`, background: surface }}>
+              <h2 className="text-3xl" style={headlineFont}>La nostra storia</h2>
+              <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6">{invitation.story}</p>
+            </section>
+          )}
 
           <div className={`mt-4 grid w-full gap-2 ${compact ? "grid-cols-3" : "gap-3 sm:grid-cols-3"}`}>
             <InfoCard compact={compact} icon={<Clock3 size={17} />} label="Quando" value={`${dateLabel}${invitation.time ? `, ${invitation.time}` : ""}`} palette={palette} />
@@ -130,30 +150,7 @@ export function TemplateStage({ invitation, compact = false, plan = "premium" }:
       )}
 
       {!compact && (
-        <section className="relative z-10 mx-auto grid max-w-5xl gap-5 px-5 pb-16 sm:px-8 lg:grid-cols-[1.1fr_.9fr]">
-          <div className="rounded-[28px] border p-6 sm:p-8" style={{ borderColor: `${palette.accent}28`, background: surface }}>
-            <p className="text-xs font-semibold uppercase tracking-[.2em] opacity-55">{copy.layout.note}</p>
-            <h2 className="mt-3 font-editorial text-4xl leading-tight sm:text-5xl">{copy.detailsTitle}</h2>
-            <p className="mt-4 max-w-2xl text-base leading-7 opacity-72">{copy.emotional}</p>
-            <div className="mt-7 space-y-3">
-              {copy.timeline.slice(0, 4).map((item, index) => (
-                <motion.div
-                  key={`${item}-${index}`}
-                  className="flex items-center gap-4 rounded-2xl border px-4 py-3"
-                  style={{ borderColor: `${palette.accent}22`, background: softSurface }}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.04 }}
-                >
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-semibold text-white" style={{ background: palette.accent }}>{index + 1}</span>
-                  <span className="text-sm font-medium sm:text-base">{item}</span>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-5">
+        <section className="relative z-10 mx-auto grid max-w-5xl grid-cols-1 gap-5 px-5 pb-8 sm:px-8 lg:grid-cols-2">
             <div className="rounded-[28px] border p-6" style={{ borderColor: `${palette.accent}28`, background: surface }}>
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.18em]" style={{ color: palette.accent }}><MapPin size={15} /> Location</div>
               <div className="mt-3 text-balance text-2xl font-semibold leading-tight">{invitation.place || "Location da definire"}</div>
@@ -171,10 +168,8 @@ export function TemplateStage({ invitation, compact = false, plan = "premium" }:
             </div>
             <div className="rounded-[28px] border p-6" style={{ borderColor: `${palette.accent}28`, background: surface }}>
               <div className="text-xs font-semibold uppercase tracking-[.18em]" style={{ color: palette.accent }}>{copy.countdown}</div>
-              <Countdown date={invitation.date} palette={palette} />
-              <p className="mt-5 text-sm leading-6 opacity-65">{copy.musicLine}</p>
+              <Countdown date={invitation.date} time={invitation.time} palette={palette} />
             </div>
-          </div>
         </section>
       )}
     </section>
@@ -182,6 +177,7 @@ export function TemplateStage({ invitation, compact = false, plan = "premium" }:
 }
 
 function HeroBackground({ invitation, palette, image }: { invitation: Invitation; palette: Palette; image?: string }) {
+  const model = additionalTemplates.find((item) => item.id === invitation.template);
   const isCinema = invitation.template === "cinema";
   const imageOverlay = isCinema
     ? "linear-gradient(180deg, rgba(7,8,10,.30), rgba(7,8,10,.78))"
@@ -194,7 +190,7 @@ function HeroBackground({ invitation, palette, image }: { invitation: Invitation
         <div
           className="absolute inset-0"
           style={{
-            background: `linear-gradient(145deg, ${palette.bg}, ${palette.soft} 56%, ${palette.bg})`
+            background: model?.preview ?? `linear-gradient(145deg, ${palette.bg}, ${palette.soft} 56%, ${palette.bg})`
           }}
         />
       )}
@@ -216,21 +212,28 @@ function InfoCard({ compact = false, icon, label, value, palette }: { compact?: 
   );
 }
 
-function Countdown({ date, palette }: { date: string; palette: Palette }) {
-  const parsed = date ? new Date(date).getTime() : Date.now();
-  const target = Number.isFinite(parsed) ? parsed : Date.now();
-  const diff = Math.max(0, target - Date.now());
+function Countdown({ date, time, palette }: { date: string; time: string; palette: Palette }) {
+  const [now, setNow] = useState<number>();
+  useEffect(() => {
+    const tick = () => setNow(Date.now());
+    tick();
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const target = Date.parse(`${date}T${time || "00:00"}`);
+  const diff = now === undefined || !Number.isFinite(target) ? 0 : Math.max(0, target - now);
   const days = Math.floor(diff / 86400000);
   const hours = Math.floor((diff % 86400000) / 3600000);
   const minutes = Math.floor((diff % 3600000) / 60000);
   return (
-    <div className="mt-4 grid grid-cols-3 gap-3">
+    <div className="mt-4 grid grid-cols-4 gap-2">
       {[
         ["Giorni", days],
         ["Ore", hours],
-        ["Min", minutes]
+        ["Min", minutes],
+        ["Sec", Math.floor((diff % 60000) / 1000)]
       ].map(([label, value]) => (
-        <div key={label} className="rounded-2xl p-4 text-center" style={{ background: palette.soft }}>
+        <div key={label} className="min-w-0 rounded-2xl px-1 py-3 text-center" style={{ background: palette.soft }}>
           <div className="text-2xl font-semibold sm:text-3xl">{value}</div>
           <div className="mt-1 text-[10px] font-semibold uppercase tracking-[.16em] opacity-62">{label}</div>
         </div>
