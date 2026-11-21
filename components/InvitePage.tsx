@@ -11,7 +11,6 @@ import { normalizeInvitation } from "@/lib/invitation-utils";
 import { InvitationOpening } from "@/components/InvitationOpening";
 import { TemplateStage } from "@/components/TemplateStage";
 
-const IS_TEST_MODE = true;
 
 export function InvitePage({ slug }: { slug: string }) {
   const [invitation, setInvitation] = useState<Invitation>(defaultInvitation);
@@ -24,7 +23,7 @@ export function InvitePage({ slug }: { slug: string }) {
   const [musicOn, setMusicOn] = useState(false);
   const [plan, setPlan] = useState<ProductPlan>("premium");
   const palette = palettes[invitation.palette as keyof typeof palettes] ?? palettes.champagne;
-  const features = IS_TEST_MODE ? planFeatures.premium : planFeatures[plan];
+  const features = planFeatures[plan];
   useEffect(() => {
     const address = new URL(window.location.href);
     const fromEditor = address.searchParams.get("editor") === "1";
@@ -83,13 +82,13 @@ export function InvitePage({ slug }: { slug: string }) {
   }
 
   if (loading) return <main className="min-h-screen" aria-busy="true" style={{ background: palette.bg }} />;
-  const hasOpening = invitation.opening && invitation.opening !== "direct";
+  const hasOpening = features.premiumAnimations && invitation.opening && invitation.opening !== "direct";
 
   return (
     <main className="min-h-screen" style={{ background: palette.bg, color: palette.ink }}>
       {editorView && (
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-black/10 bg-white px-4 py-3 text-sm text-[#15151b] sm:px-8">
-          <a className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href={`/?edit=${encodeURIComponent(slug)}`}>← Modifica invito</a>
+          <a className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href={`/?edit=${encodeURIComponent(slug)}&p=${plan}`}>← Modifica invito</a>
           <a className="inline-flex min-h-11 items-center rounded-full bg-[#15151b] px-4 font-semibold text-white" href={`https://wa.me/?text=${encodeURIComponent(`Apri l’invito: ${url}`)}`} target="_blank" rel="noreferrer">Condividi su WhatsApp</a>
         </header>
       )}
@@ -107,7 +106,7 @@ export function InvitePage({ slug }: { slug: string }) {
         <InvitationOpening key="opening" invitation={invitation} onOpen={() => setOpened(true)} />
       ) : (
       <div key="invitation">
-      {invitation.music && musicOn && <audio src={invitation.music} autoPlay loop />}
+      {features.music && invitation.music && musicOn && <audio src={invitation.music} autoPlay loop />}
       <TemplateStage invitation={invitation} plan={plan} showQr={editorView} />
 
       <section className="mx-auto max-w-5xl px-5 pb-10 sm:px-8">
@@ -166,7 +165,7 @@ export function InvitePage({ slug }: { slug: string }) {
           </div>
         )}
 
-        {invitation.music && (
+        {features.music && invitation.music && (
           <button onClick={() => setMusicOn((value) => !value)} className="fixed bottom-4 left-1/2 z-30 -translate-x-1/2 rounded-full border px-4 py-3 text-sm shadow-soft-xl backdrop-blur-xl" style={{ borderColor: `${palette.accent}33`, background: `${palette.bg}dd` }}>
             <span className="inline-flex items-center gap-2"><Volume2 size={16} /> {musicOn ? "Musica attiva" : "Avvia musica"}</span>
           </button>

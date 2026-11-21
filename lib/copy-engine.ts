@@ -60,6 +60,20 @@ const packs: Record<EventType, EventCopyPack> = {
     sections: [["Cerimonia", "Pranzo", "Confetti", "Foto"], ["Rito", "Famiglia", "Tavola", "Bomboniere"], ["Chiesa", "Accoglienza", "Pranzo", "Saluti"]],
     timelines: [["Cerimonia", "Foto famiglia", "Pranzo", "Confetti", "Saluti"], ["Rito", "Accoglienza", "Tavola", "Dolci", "Ringraziamenti"], ["Arrivo", "Celebrazione", "Foto", "Pranzo", "Bomboniere"]]
   },
+  comunione: {
+    titles: ["La mia Prima Comunione", "Un giorno di gioia", "Insieme per la Prima Comunione"],
+    subtitles: ["Una celebrazione da condividere con le persone care."],
+    openings: ["Con gioia ti invitiamo a condividere il giorno della Prima Comunione."],
+    emotional: ["La tua presenza renderà questa giornata ancora più speciale."],
+    detailsTitles: ["La celebrazione"],
+    rsvp: ["Conferma la presenza"],
+    whatsapp: ["Ciao, confermo la mia presenza alla Prima Comunione."],
+    reminders: ["Segna la data della Prima Comunione."],
+    thanks: ["Grazie per aver condiviso questa giornata con noi."],
+    countdown: ["Manca poco alla Prima Comunione"],
+    sections: [["Celebrazione"]],
+    timelines: [["Celebrazione"]]
+  },
   "baby-shower": {
     titles: ["Un piccolo arrivo, tanta meraviglia", "La festa della dolce attesa", "Una sorpresa piena di tenerezza", "Piccole cose, grande gioia", "Un party per accogliere il futuro", "La dolce attesa prende forma", "Una festa morbida e luminosa", "Benvenuta attesa"],
     subtitles: ["Un momento tenero, curato e pieno di piccoli dettagli.", "Giochi leggeri, tavola dolce e un'atmosfera che abbraccia.", "Una festa morbida, luminosa e pensata per stare vicini.", "Colori delicati e una gioia che cresce."],

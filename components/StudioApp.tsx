@@ -47,7 +47,6 @@ import { writingStyles, WritingStyle } from "@/lib/writing-styles";
 
 const styleOptions = Object.keys(styleRules);
 const fontOptions = ["Editorial serif", "Modern grotesk", "Classic roman", "Soft rounded"];
-const IS_TEST_MODE = true;
 const DRAFT_KEY = "invitation-creator-pro:draft:v1";
 const FILE_LIMITS = {
   images: 2 * 1024 * 1024,
@@ -59,6 +58,7 @@ const FILE_LIMITS = {
 export function StudioApp() {
   const [invitations, setInvitations] = useState<Invitation[]>([defaultInvitation]);
   const [active, setActive] = useState<Invitation>(defaultInvitation);
+  const [showAllTemplates, setShowAllTemplates] = useState(false);
   const [plan, setPlan] = useState<ProductPlan>("premium");
   const [qr, setQr] = useState("");
   const [origin, setOrigin] = useState("");
@@ -67,8 +67,8 @@ export function StudioApp() {
   const [hydrated, setHydrated] = useState(false);
   const generatedCopy = buildInviteCopy(active);
   const palette = palettes[active.palette as keyof typeof palettes] ?? palettes.champagne;
-  const features = IS_TEST_MODE ? planFeatures.premium : planFeatures[plan];
-  const publicPlan = IS_TEST_MODE ? "premium" : plan;
+  const features = planFeatures[plan];
+  const publicPlan = plan;
   const status = invitationStatus(active);
   const shareUrl = origin ? `${origin}/invite/${active.slug}?p=${publicPlan}&d=${encodeURIComponent(encodeInvitation(active))}` : `/invite/${active.slug}`;
   const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(`Apri il mio invito digitale: ${shareUrl}`)}`;
@@ -87,6 +87,10 @@ export function StudioApp() {
   }
 
   async function downloadQrFor(invitation = active) {
+    if (!features.qrDownload) {
+      setNotice("Il download del QR è disponibile in Premium.");
+      return;
+    }
     try {
       const qrData = await QRCode.toDataURL(inviteUrl(invitation), {
         errorCorrectionLevel: "M",
@@ -115,7 +119,9 @@ export function StudioApp() {
       window.localStorage.removeItem(DRAFT_KEY);
     }
     setInvitations(stored);
-    const editSlug = new URLSearchParams(window.location.search).get("edit");
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("p") === "free") setPlan("free");
+    const editSlug = params.get("edit");
     const selected = editSlug ? stored.find((item) => item.slug === editSlug) : undefined;
     setActive(selected ?? draftInvitation ?? stored[0] ?? defaultInvitation);
     setHydrated(true);
@@ -144,7 +150,7 @@ export function StudioApp() {
   }, [origin, shareUrl, palette.ink]);
 
   useEffect(() => {
-    if (features.templates.includes(active.template)) return;
+    if (features.templates.some((id) => id === active.template)) return;
     setActive((current) => ({ ...current, template: "lumiere", palette: "champagne" }));
     setNotice("Piano Demo attivo: ho sostituito il template premium con Lumiere.");
   }, [active.template, features.templates]);
@@ -155,7 +161,7 @@ export function StudioApp() {
 
   function applyEvent(eventType: EventType) {
     const suggestion = getSmartSuggestion(eventType, active.style);
-    const nextTemplate = features.templates.includes(suggestion.template) ? suggestion.template : "lumiere";
+    const nextTemplate = features.templates.some((id) => id === suggestion.template) ? suggestion.template : "lumiere";
     update({
       eventType,
       palette: suggestion.palette,
@@ -168,7 +174,7 @@ export function StudioApp() {
 
   function applyStyle(style: string) {
     const suggestion = getSmartSuggestion(active.eventType, style);
-    const nextTemplate = features.templates.includes(suggestion.template) ? suggestion.template : "lumiere";
+    const nextTemplate = features.templates.some((id) => id === suggestion.template) ? suggestion.template : "lumiere";
     update({
       style,
       palette: suggestion.palette,
@@ -478,13 +484,14 @@ export function StudioApp() {
             </label>
             <label className="mt-3 block text-sm font-medium">
               Apertura dell’invito
-              <select value={active.opening ?? "direct"} onChange={(event) => {
+              <select disabled={!features.premiumAnimations} value={features.premiumAnimations ? active.opening ?? "direct" : "direct"} onChange={(event) => {
                 update({ opening: event.target.value as Invitation["opening"] });
               }} className="mt-2 block w-full rounded-2xl border border-black/10 bg-white p-3">
                 <option value="direct">Diretta</option>
                 <option value="envelope">Busta con sigillo</option>
                 <option value="balloon">Palloncino</option>
               </select>
+              {!features.premiumAnimations && <span className="mt-1 block text-xs text-black/65">Le aperture animate sono disponibili in Premium.</span>}
             </label>
             {(status.missing.length > 0 || status.pastDate) && (
               <div className="mt-4 flex gap-3 rounded-2xl border border-[#b35f42]/20 bg-[#fff4ef] p-4 text-sm leading-6 text-[#7a3926]">
@@ -500,21 +507,32 @@ export function StudioApp() {
             </div>
           </Panel>
 
-          <Panel title="Modelli grafici" icon={<Play size={17} />}>
+          <details className="rounded-[26px] border border-black/10 bg-white p-4">
+            <summary className="cursor-pointer py-1 text-sm font-semibold">
+              Modelli grafici · {templates.find((item) => item.id === active.template)?.name}
+            </summary>
+            <label className="my-3 flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={showAllTemplates} onChange={(event) => setShowAllTemplates(event.target.checked)} />
+              Mostra tutti i modelli
+            </label>
             <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
-              {templates.map((template) => {
-                const locked = !features.templates.includes(template.id);
+              {templates.filter((template) =>
+                showAllTemplates || template.id === active.template ||
+                ("event" in template ? template.event === active.eventType :
+                  "bestFor" in template ? template.bestFor.some((event) => event === active.eventType) : false)
+              ).map((template) => {
+                const locked = !features.templates.some((id) => id === template.id);
                 return (
                 <button key={template.id} aria-pressed={active.template === template.id} onClick={() => locked ? setNotice("Template premium: passa a Premium per usarlo senza limiti.") : update({ template: template.id as TemplateId, palette: template.palette })} className={`group overflow-hidden rounded-[24px] border bg-white p-3 text-left transition hover:-translate-y-0.5 ${active.template === template.id ? "border-black shadow-soft-xl" : "border-black/10 hover:border-black/30"} ${locked ? "opacity-60" : ""}`}>
                   <div className="relative h-14 rounded-xl sm:h-20" style={{ background: template.preview }}>
-                    {locked && <span className="absolute right-3 top-3 rounded-full bg-black px-3 py-1 text-[11px] font-semibold text-white">Premium</span>}
+                    {locked && <span className="absolute right-1 top-1 rounded-full bg-black px-3 py-1 text-[11px] font-semibold text-white">Premium</span>}
                   </div>
                   <div className="mt-3 text-sm font-semibold">{template.name}</div>
                   <div className="mt-1 text-xs leading-5 text-black/52">{template.description}</div>
                 </button>
               );})}
             </div>
-          </Panel>
+          </details>
           <div className="fixed inset-x-0 bottom-0 z-30 space-y-2 border-t border-black/10 bg-[#fbfaf7] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:static sm:border-0 sm:p-0">
             <button type="button" disabled={!hydrated || busy === "save"} onClick={() => persist(true)} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#15151b] px-6 text-sm font-semibold text-white disabled:opacity-60 sm:w-auto">
               <Play size={17} /> {busy === "save" ? "Generazione in corso…" : "Genera invito"}

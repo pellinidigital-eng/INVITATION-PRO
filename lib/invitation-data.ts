@@ -12,6 +12,7 @@ export type EventType =
   | "matrimonio"
   | "compleanno"
   | "battesimo"
+  | "comunione"
   | "baby-shower"
   | "laurea"
   | "anniversario"
@@ -33,7 +34,22 @@ export type TemplateId =
   | "acquerello"
   | "monocromo"
   | "tramonto"
-  | "brina";
+  | "brina"
+  | "ulivo"
+  | "nozze-perla"
+  | "gardenia"
+  | "nuvola-celeste"
+  | "piccola-stella"
+  | "fiocco-rosa"
+  | "spighe"
+  | "luce-chiara"
+  | "rametto-salvia"
+  | "festa-pop"
+  | "candeline"
+  | "notte-neon"
+  | "arcobaleno"
+  | "buonanotte"
+  | "orsetti";
 
 export type Invitation = {
   id: string;
@@ -68,6 +84,7 @@ export const eventTypes = [
   { id: "matrimonio", label: "Matrimonio", icon: Heart },
   { id: "compleanno", label: "Compleanno", icon: Cake },
   { id: "battesimo", label: "Battesimo", icon: Sparkles },
+  { id: "comunione", label: "Comunione", icon: Sparkles },
   { id: "baby-shower", label: "Baby shower", icon: Baby },
   { id: "laurea", label: "Laurea", icon: GraduationCap },
   { id: "anniversario", label: "Anniversario", icon: Gem },
@@ -146,6 +163,36 @@ export const additionalTemplates = [
     preview: "radial-gradient(circle at 73% 29%,#fff0b7 0 14%,transparent 15%),linear-gradient(165deg,#f9efdf,#e9b082,#bd786f)", align: "left", radius: 26, premium: true },
   { id: "brina", name: "Brina", description: "Cristalli chiari su sfondo freddo", palette: "celeste",
     preview: "repeating-conic-gradient(from 30deg at 48% 12%,#edf8ff 0 9deg,#c4deea 9deg 10deg,#f9fcff 10deg 20deg)", align: "center", radius: 14, premium: true },
+  { id: "ulivo", name: "Rami d’ulivo", description: "Salvia e avorio", palette: "emerald",
+    preview: "radial-gradient(ellipse at top left,#a9bf92,transparent 58%),radial-gradient(ellipse at bottom right,#77956e,#f5f2df 70%)", align: "center", radius: 26, premium: false, event: "matrimonio" },
+  { id: "nozze-perla", name: "Nozze di perla", description: "Riflessi madreperla e oro", palette: "champagne",
+    preview: "conic-gradient(from 45deg,#f4e4c9,#fffdfa,#c7b596,#fbf4ec,#f4e4c9)", align: "center", radius: 40, premium: true, event: "matrimonio" },
+  { id: "gardenia", name: "Gardenia", description: "Petali avorio su rosa antico", palette: "rose",
+    preview: "radial-gradient(ellipse at 16% 20%,#fff7eb 10%,transparent 41%),radial-gradient(ellipse at 89% 89%,#f7e6ce 15%,#ac687e 72%)", align: "left", radius: 12, premium: true, event: "matrimonio" },
+  { id: "nuvola-celeste", name: "Nuvola celeste", description: "Nuvole bianche in un cielo chiaro", palette: "celeste",
+    preview: "radial-gradient(ellipse at 15% 75%,white 15%,transparent 35%),radial-gradient(ellipse at 85% 60%,white 10%,transparent 32%),#afd4e8", align: "center", radius: 26, premium: false, event: "battesimo" },
+  { id: "piccola-stella", name: "Piccola stella", description: "Luce dorata e toni panna", palette: "champagne",
+    preview: "repeating-conic-gradient(from 7deg at 25% 20%,#ebcb90 0 6deg,#fdf5df 6deg 21deg)", align: "center", radius: 40, premium: true, event: "battesimo" },
+  { id: "fiocco-rosa", name: "Fiocco rosa", description: "Nastri rosa e carta delicata", palette: "rose",
+    preview: "repeating-linear-gradient(42deg,#fff1f3 0 32px,#dfa5ba 32px 38px,#f5d8df 38px 46px)", align: "left", radius: 12, premium: true, event: "battesimo" },
+  { id: "spighe", name: "Spighe dorate", description: "Avorio e piccoli tratti dorati", palette: "champagne",
+    preview: "repeating-linear-gradient(115deg,#faf1db 0 10px,#d2ab63 10px 12px,#f5e7cb 12px 27px)", align: "center", radius: 26, premium: false, event: "comunione" },
+  { id: "luce-chiara", name: "Luce chiara", description: "Vetrata chiara nei toni azzurri", palette: "celeste",
+    preview: "conic-gradient(from 32deg at 60% 20%,#b6d5df,#fffaf2,#87b0c1,#ece0b3,#b6d5df)", align: "center", radius: 40, premium: true, event: "comunione" },
+  { id: "rametto-salvia", name: "Rametto di salvia", description: "Verde tenue e forme a foglia", palette: "emerald",
+    preview: "radial-gradient(ellipse at 0 40%,#9cab83 18%,transparent 44%),radial-gradient(ellipse at 100% 65%,#7e9b7a 12%,#edf2dc 53%)", align: "left", radius: 12, premium: true, event: "comunione" },
+  { id: "festa-pop", name: "Festa Pop", description: "Righe vivaci e contrasti colorati", palette: "celeste",
+    preview: "repeating-linear-gradient(145deg,#80cbd0 0 17px,#fff5c5 17px 34px,#e99fbb 34px 51px)", align: "center", radius: 26, premium: false, event: "compleanno" },
+  { id: "candeline", name: "Candeline", description: "Fiammelle e colori da pasticceria", palette: "rose",
+    preview: "radial-gradient(ellipse,#f7a15d 13%,transparent 16%) 0 0/23px 36px,#fbd7e2", align: "center", radius: 40, premium: true, event: "compleanno" },
+  { id: "notte-neon", name: "Notte neon", description: "Luci viola e blu elettrico", palette: "noir",
+    preview: "radial-gradient(ellipse at 5% 5%,#7444b1,transparent 55%),radial-gradient(ellipse at 90% 95%,#236687,#15141e 60%)", align: "left", radius: 12, premium: true, event: "compleanno" },
+  { id: "arcobaleno", name: "Piccolo arcobaleno", description: "Archi color pesca, salvia e crema", palette: "champagne",
+    preview: "radial-gradient(ellipse at 50% 100%,#fff5dd 0 24%,#e7b3ab 25% 37%,#c4d1ae 38% 51%,#f5cf9a 52% 64%,#fff0de 65%)", align: "center", radius: 26, premium: false, event: "baby-shower" },
+  { id: "buonanotte", name: "Buonanotte luna", description: "Luna chiara su fondo lavanda", palette: "celeste",
+    preview: "radial-gradient(circle at 75% 27%,#fff5cd 0 12%,transparent 13%),linear-gradient(145deg,#d6c6ee,#b9d7e8)", align: "center", radius: 40, premium: true, event: "baby-shower" },
+  { id: "orsetti", name: "Orsetti e miele", description: "Cerchi morbidi nei toni miele", palette: "champagne",
+    preview: "radial-gradient(circle at 20% 25%,#d8ac79 0 13%,transparent 14%),radial-gradient(circle at 80% 30%,#c89768 0 16%,#f6e0b8 17%)", align: "left", radius: 12, premium: true, event: "baby-shower" },
 ] as const;
 
 export const templates = [
@@ -311,6 +358,18 @@ export const smartCopy: Record<EventType, {
     sections: ["Cerimonia", "Pranzo", "Confetti", "Foto famiglia"],
     timeline: ["Cerimonia", "Foto famiglia", "Pranzo", "Confetti", "Saluti"]
   },
+  comunione: {
+    title: "La mia Prima Comunione",
+    intro: ["Con gioia ti invitiamo a condividere il giorno della Prima Comunione."],
+    detailsTitle: "La celebrazione",
+    rsvp: "Conferma la presenza",
+    whatsapp: "Ciao, confermo la mia presenza alla Prima Comunione.",
+    thanks: "Grazie per aver condiviso questa giornata con noi.",
+    reminder: "Segna la data della Prima Comunione.",
+    ctas: ["Conferma la presenza"],
+    sections: ["Celebrazione", "Famiglia"],
+    timeline: ["Celebrazione"]
+  },
   "baby-shower": {
     title: "Un piccolo grande arrivo",
     intro: [
@@ -469,7 +528,7 @@ function demoImage(label: string, bg: string, accent: string, accent2: string) {
 export const planFeatures = {
   free: {
     label: "Demo",
-    templates: ["lumiere", "botanica", "playful"],
+    templates: templates.filter((item) => !item.premium).map((item) => item.id),
     watermark: true,
     qrDownload: false,
     exportFiles: false,
@@ -507,9 +566,10 @@ export const styleRules: Record<string, { palette: keyof typeof palettes; tone: 
 export function getSmartSuggestion(eventType: EventType, style: string) {
   const copy = smartCopy[eventType];
   const rule = styleRules[style.toLowerCase()] ?? styleRules.elegante;
+  const model = eventType === "comunione" ? additionalTemplates.find((item) => item.id === "spighe") : undefined;
   return {
-    palette: rule.palette,
-    template: eventType === "business" ? "executive" : rule.template,
+    palette: model?.palette ?? rule.palette,
+    template: model?.id ?? (eventType === "business" ? "executive" : rule.template),
     tone: rule.tone,
     description: copy.intro.join(" ")
   };
