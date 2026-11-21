@@ -4,11 +4,14 @@ import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Invitation, palettes } from "@/lib/invitation-data";
 
+import { getInvitationFont } from "@/lib/invitation-fonts";
+
 export function InvitationOpening({ invitation, compact = false, onOpen }: {
   invitation: Invitation;
   compact?: boolean;
   onOpen: () => void;
 }) {
+  const font = getInvitationFont(invitation.font);
   const palette = palettes[invitation.palette as keyof typeof palettes] ?? palettes.champagne;
   const reducedMotion = useReducedMotion();
   const [opening, setOpening] = useState(false);
@@ -41,7 +44,7 @@ export function InvitationOpening({ invitation, compact = false, onOpen }: {
             </div>
           )}
         </motion.div>
-        <span className="block font-editorial text-4xl leading-tight">{invitation.names || "Il tuo evento"}</span>
+        <span className="block break-words text-4xl leading-tight" style={{ fontFamily: font.family, fontWeight: font.weight }}>{invitation.names || "Il tuo evento"}</span>
         <span className="mt-6 inline-flex min-h-11 items-center rounded-full border px-5 text-sm font-semibold group-hover:shadow-md" style={{ borderColor: palette.accent }}>
           {balloon ? "Tocca il palloncino per aprire" : "Apri l’invito"}
         </span>

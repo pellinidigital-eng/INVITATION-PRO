@@ -7,6 +7,8 @@ import { CalendarPlus, Clock3, MapPin, MessageCircle, QrCode, Shirt, Sparkles } 
 import { buildInviteCopy } from "@/lib/copy-engine";
 import { additionalTemplates, Invitation, palettes, planFeatures, ProductPlan, templates } from "@/lib/invitation-data";
 
+import { getInvitationFont } from "@/lib/invitation-fonts";
+
 type Props = {
   invitation: Invitation;
   compact?: boolean;
@@ -48,6 +50,8 @@ export function TemplateStage({ invitation, compact = false, plan = "premium", s
   const whatsappUrl = whatsappDigits ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(copy.whatsapp)}` : "";
   const heroImage = invitation.images[0];
   const name = invitation.names || "Il tuo evento";
+  const font = getInvitationFont(invitation.font);
+  const headlineFont = { fontFamily: font.family, fontWeight: font.weight };
   const heroFontSize = nameFontSize(name, compact);
   const dark = palette.bg === "#101114";
   const surface = dark ? "rgba(16,17,20,.74)" : "rgba(255,255,255,.72)";
@@ -90,7 +94,7 @@ export function TemplateStage({ invitation, compact = false, plan = "premium", s
 
             <h1
               className="mx-auto mt-4 max-w-[980px] whitespace-normal text-balance font-editorial font-medium leading-[.98] tracking-normal [hyphens:none] [overflow-wrap:break-word] [word-break:normal]"
-              style={{ fontSize: heroFontSize }}
+              style={{ ...headlineFont, fontSize: heroFontSize }}
             >
               {name}
             </h1>
@@ -126,7 +130,7 @@ export function TemplateStage({ invitation, compact = false, plan = "premium", s
 
           {invitation.story && (
             <section className="mt-4 w-full rounded-[24px] border p-5" style={{ borderColor: `${palette.accent}28`, background: surface }}>
-              <h2 className="font-editorial text-3xl">La nostra storia</h2>
+              <h2 className="text-3xl" style={headlineFont}>La nostra storia</h2>
               <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6">{invitation.story}</p>
             </section>
           )}

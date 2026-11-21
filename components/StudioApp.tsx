@@ -45,10 +45,10 @@ import { encodeInvitation } from "@/lib/share";
 import { invitationStatus, normalizeInvitation } from "@/lib/invitation-utils";
 import { TemplateStage } from "@/components/TemplateStage";
 
+import { getInvitationFont, invitationFonts } from "@/lib/invitation-fonts";
 import { writingStyles, WritingStyle } from "@/lib/writing-styles";
 
 const styleOptions = Object.keys(styleRules);
-const fontOptions = ["Editorial serif", "Modern grotesk", "Classic roman", "Soft rounded"];
 const DRAFT_KEY = "invitation-creator-pro:draft:v1";
 const FILE_LIMITS = {
   images: 2 * 1024 * 1024,
@@ -72,6 +72,7 @@ export function StudioApp() {
   const features = planFeatures[plan];
   const publicPlan = plan;
   const status = invitationStatus(active);
+  const selectedFont = getInvitationFont(active.font);
   const recommendation = getEventRecommendation(active.eventType, plan);
   const shareUrl = origin ? `${origin}/invite/${active.slug}?p=${publicPlan}&d=${encodeURIComponent(encodeInvitation(active))}` : `/invite/${active.slug}`;
   const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(`Apri il mio invito digitale: ${shareUrl}`)}`;
@@ -443,9 +444,20 @@ export function StudioApp() {
                 <button key={key} title={item.name} onClick={() => update({ palette: key })} className={`h-10 rounded-full border ${active.palette === key ? "border-black" : "border-black/10"}`} style={{ background: `linear-gradient(90deg, ${item.bg}, ${item.accent}, ${item.accent2})` }} />
               ))}
             </div>
-            <select value={active.font} onChange={(event) => update({ font: event.target.value })} className="mt-3 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm">
-              {fontOptions.map((font) => <option key={font}>{font}</option>)}
-            </select>
+            <details className="mt-3 rounded-2xl border border-black/10 bg-white px-3">
+              <summary className="cursor-pointer py-3 text-sm font-semibold">
+                Carattere · <span className="text-lg" style={{ fontFamily: selectedFont.family, fontWeight: selectedFont.weight }}>{selectedFont.name}</span>
+              </summary>
+              <fieldset className="grid grid-cols-1 gap-2 pb-3 min-[480px]:grid-cols-2 lg:grid-cols-1">
+                <legend className="sr-only">Carattere dell’invito</legend>
+                {invitationFonts.map((font) => (
+                  <label key={font.name} className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-3 py-2 ${selectedFont.name === font.name ? "border-black bg-[#f4f1eb]" : "border-black/10"}`}>
+                    <input type="radio" name="invitation-font" value={font.name} checked={selectedFont.name === font.name} onChange={() => update({ font: font.name })} className="shrink-0 accent-black" />
+                    <span className="min-w-0 break-words text-xl leading-snug" style={{ fontFamily: font.family, fontWeight: font.weight }}>{font.name}</span>
+                  </label>
+                ))}
+              </fieldset>
+            </details>
           </Panel>
 
           </details>
