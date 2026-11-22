@@ -31,6 +31,7 @@ import {
   getSmartSuggestion,
   smartCopy,
   Invitation,
+  invitationOpenings,
   palettes,
   planFeatures,
   ProductPlan,
@@ -514,9 +515,9 @@ export function StudioApp() {
               <select disabled={!features.premiumAnimations} value={features.premiumAnimations ? active.opening ?? "direct" : "direct"} onChange={(event) => {
                 update({ opening: event.target.value as Invitation["opening"] });
               }} className="mt-2 block w-full rounded-2xl border border-black/10 bg-white p-3">
-                <option value="direct">Diretta</option>
-                <option value="envelope">Busta con sigillo</option>
-                <option value="balloon">Palloncino</option>
+                {Object.entries(invitationOpenings).map(([id, option]) => (
+                  <option key={id} value={id}>{option.label}</option>
+                ))}
               </select>
               {!features.premiumAnimations && <span className="mt-1 block text-xs text-black/65">Le aperture animate sono disponibili in Premium.</span>}
             </label>
