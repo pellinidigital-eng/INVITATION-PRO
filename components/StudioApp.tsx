@@ -42,7 +42,7 @@ import {
 } from "@/lib/invitation-data";
 import { buildInviteCopy } from "@/lib/copy-engine";
 import { deleteInvitation, loadInvitations, saveInvitation, uniqueSlug } from "@/lib/storage";
-import { encodeInvitation } from "@/lib/share";
+import { encodeInvitation, publishedInviteCode, shareCodePattern, whatsappInviteLink } from "@/lib/share";
 import { invitationStatus, normalizeInvitation } from "@/lib/invitation-utils";
 import { TemplateStage } from "@/components/TemplateStage";
 
@@ -75,10 +75,12 @@ export function StudioApp() {
   const status = invitationStatus(active);
   const selectedFont = getInvitationFont(active.font);
   const recommendation = getEventRecommendation(active.eventType, plan);
-  const shareUrl = origin ? `${origin}/invite/${active.slug}?p=${publicPlan}&d=${encodeURIComponent(encodeInvitation(active))}` : `/invite/${active.slug}`;
-  const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(`Apri il mio invito digitale: ${shareUrl}`)}`;
+  const shareUrl = inviteUrl(active);
+  const whatsappShareUrl = whatsappInviteLink(active, shareUrl);
 
   function inviteUrl(invitation: Invitation) {
+    const code = publishedInviteCode(invitation, publicPlan);
+    if (code) return `${origin}/i/${code}`;
     return origin ? `${origin}/invite/${invitation.slug}?p=${publicPlan}&d=${encodeURIComponent(encodeInvitation(invitation))}` : `/invite/${invitation.slug}`;
   }
 
@@ -237,19 +239,40 @@ export function StudioApp() {
     setBusy("save");
     try {
       const normalized = normalizeInvitation(active);
-      const invitation = {
+      let invitation = {
         ...normalized,
         id: active.id.startsWith("demo") ? createId() : active.id,
         slug: uniqueSlug(slugify(normalized.names), active.id),
         createdAt: active.createdAt || new Date().toISOString(),
         visits: active.visits || Math.floor(450 + Math.random() * 1800)
       };
-      const next = saveInvitation(invitation);
+      let next = saveInvitation(invitation);
+      if (!publishedInviteCode(invitation, publicPlan)) {
+        try {
+          const payload = encodeInvitation(invitation);
+          const response = await fetch("/api/share", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ payload, plan: publicPlan })
+          });
+          if (!response.ok) throw new Error("Link breve non disponibile");
+          const { code } = await response.json() as { code: string };
+          if (!shareCodePattern.test(code)) throw new Error("Codice non valido");
+          invitation = { ...invitation, publishedLink: { code, payload, plan: publicPlan } };
+          next = saveInvitation(invitation);
+        } catch {
+          setActive(invitation);
+          setInvitations(next);
+          setNotice("Invito salvato. Il link breve non è disponibile adesso. Riprova con Genera invito.");
+          if (openResult) window.location.assign(`/invite/${invitation.slug}?p=${publicPlan}&editor=1&short=unavailable`);
+          return;
+        }
+      }
       setActive(invitation);
       setInvitations(next);
       setNotice("Invito salvato. Puoi copiare il link per condividerlo.");
       window.localStorage.removeItem(DRAFT_KEY);
-      if (openResult) window.location.assign(`${inviteUrl(invitation)}&editor=1`);
+      if (openResult) window.location.assign(`/invite/${invitation.slug}?p=${publicPlan}&editor=1`);
     } catch {
       setNotice("Salvataggio non completato: riduci i media caricati e riprova.");
     } finally {

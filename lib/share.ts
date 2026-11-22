@@ -1,4 +1,21 @@
-import { defaultInvitation, Invitation } from "@/lib/invitation-data";
+import { defaultInvitation, eventTypes, Invitation, ProductPlan } from "@/lib/invitation-data";
+
+export const shareCodePattern = /^[A-Za-z0-9_-]{16}$/;
+
+export function publishedInviteCode(invitation: Invitation, plan: ProductPlan) {
+  const link = invitation.publishedLink;
+  return link && shareCodePattern.test(link.code) && link.plan === plan && link.payload === encodeInvitation(invitation)
+    ? link.code : undefined;
+}
+
+export function invitationShareTitle(invitation: Invitation) {
+  const event = eventTypes.find(({ id }) => id === invitation.eventType);
+  return `${event?.label ?? "Invito"} · ${invitation.names}`;
+}
+
+export function whatsappInviteLink(invitation: Invitation, url: string) {
+  return `https://wa.me/?text=${encodeURIComponent(`💌 ${invitationShareTitle(invitation)}\nApri l’invito: ${url}`)}`;
+}
 
 const shareKeys: (keyof Invitation)[] = [
   "eventType",

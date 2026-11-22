@@ -5,18 +5,22 @@ import QRCode from "qrcode";
 import { AnimatePresence, motion } from "framer-motion";
 import { Download, MessageCircle, QrCode, Volume2 } from "lucide-react";
 import { defaultInvitation, Invitation, palettes, planFeatures, ProductPlan } from "@/lib/invitation-data";
-import { decodeInvitation, encodeInvitation } from "@/lib/share";
+import { decodeInvitation, encodeInvitation, publishedInviteCode, whatsappInviteLink } from "@/lib/share";
 import { findInvitation, isDeletedSlug, saveInvitation } from "@/lib/storage";
 import { normalizeInvitation } from "@/lib/invitation-utils";
 import { InvitationOpening } from "@/components/InvitationOpening";
 import { TemplateStage } from "@/components/TemplateStage";
 
 
-export function InvitePage({ slug }: { slug: string }) {
+export function InvitePage({ slug, published }: {
+  slug: string;
+  published?: { invitation: Invitation; plan: ProductPlan };
+}) {
   const [invitation, setInvitation] = useState<Invitation>(defaultInvitation);
   const [qr, setQr] = useState("");
   const [loading, setLoading] = useState(true);
   const [editorView, setEditorView] = useState(false);
+  const [shortLinkUnavailable, setShortLinkUnavailable] = useState(false);
   const [opened, setOpened] = useState(false);
   const [unavailable, setUnavailable] = useState(false);
   const [url, setUrl] = useState("");
@@ -27,17 +31,34 @@ export function InvitePage({ slug }: { slug: string }) {
   useEffect(() => {
     const address = new URL(window.location.href);
     const fromEditor = address.searchParams.get("editor") === "1";
+    setShortLinkUnavailable(fromEditor && address.searchParams.get("short") === "unavailable");
     address.searchParams.delete("editor");
+    address.searchParams.delete("short");
     setOpened(false);
     setLoading(false);
+    if (published) {
+      setUrl(address.toString());
+      setPlan(published.plan);
+      setEditorView(false);
+      setInvitation(published.invitation);
+      setUnavailable(false);
+      return;
+    }
     const found = findInvitation(slug);
     const payload = new URLSearchParams(window.location.search).get("d");
     const planParam = new URLSearchParams(window.location.search).get("p");
     const showEditor = fromEditor && Boolean(found);
     setEditorView(showEditor);
-    if (showEditor && found) address.searchParams.set("d", encodeInvitation(found));
+    const activePlan = planParam === "free" ? "free" : "premium";
+    const code = showEditor && found ? publishedInviteCode(found, activePlan) : undefined;
+    if (code) {
+      address.pathname = `/i/${code}`;
+      address.search = "";
+    } else if (showEditor && found) {
+      address.searchParams.set("d", encodeInvitation(found));
+    }
     setUrl(address.toString());
-    setPlan(planParam === "free" ? "free" : "premium");
+    setPlan(activePlan);
     if ((!found && !payload) || isDeletedSlug(slug)) {
       setUnavailable(true);
       return;
@@ -54,7 +75,7 @@ export function InvitePage({ slug }: { slug: string }) {
     }
     setInvitation(visited);
     setUnavailable(false);
-  }, [slug]);
+  }, [slug, published]);
 
   useEffect(() => {
     if (!url || !editorView) return;
@@ -89,7 +110,8 @@ export function InvitePage({ slug }: { slug: string }) {
       {editorView && (
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-black/10 bg-white px-4 py-3 text-sm text-[#15151b] sm:px-8">
           <a className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href={`/?edit=${encodeURIComponent(slug)}&p=${plan}`}>← Modifica invito</a>
-          <a className="inline-flex min-h-11 items-center rounded-full bg-[#15151b] px-4 font-semibold text-white" href={`https://wa.me/?text=${encodeURIComponent(`Apri l’invito: ${url}`)}`} target="_blank" rel="noreferrer">Condividi su WhatsApp</a>
+          <a className="inline-flex min-h-11 items-center rounded-full bg-[#15151b] px-4 font-semibold text-white" href={whatsappInviteLink(invitation, url)} target="_blank" rel="noreferrer">Condividi su WhatsApp</a>
+          {shortLinkUnavailable && <p role="status" className="w-full text-sm">Link breve temporaneamente non disponibile. Puoi usare il link standard o rigenerare l’invito più tardi.</p>}
         </header>
       )}
       {unavailable ? (

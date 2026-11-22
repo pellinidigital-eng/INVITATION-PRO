@@ -81,6 +81,7 @@ export type Invitation = {
   style: string;
   tone: string;
   writingStyle?: import("./writing-styles").WritingStyle;
+  publishedLink?: { code: string; payload: string; plan: ProductPlan };
   images: string[];
   logo?: string;
   video?: string;
