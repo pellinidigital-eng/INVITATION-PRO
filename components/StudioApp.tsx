@@ -42,7 +42,7 @@ import {
 } from "@/lib/invitation-data";
 import { buildInviteCopy } from "@/lib/copy-engine";
 import { deleteInvitation, loadInvitations, saveInvitation, uniqueSlug } from "@/lib/storage";
-import { encodeInvitation, invitationShareTitle, publishedInviteCode, shareCodePattern, whatsappInviteLink } from "@/lib/share";
+import { encodeInvitation, invitationShareMessage, publishedInviteCode, shareCodePattern, whatsappInviteLink } from "@/lib/share";
 import { invitationStatus, normalizeInvitation } from "@/lib/invitation-utils";
 import { TemplateStage } from "@/components/TemplateStage";
 
@@ -798,8 +798,8 @@ function MarketingAssets({
         <div className="rounded-[24px] border border-black/10 bg-white p-4">
           <div className="text-xs uppercase tracking-[.22em] text-black/45">WhatsApp preview</div>
           <div className="mt-4 rounded-2xl bg-[#e8f5df] p-3 text-sm leading-6">
-            <div>💌 {invitationShareTitle(active)}</div>
-            <div className="break-all">Apri l’invito: {readableInviteLink(shareUrl)}</div>
+            <div>{invitationShareMessage(active)}</div>
+            <div className="break-all">{readableInviteLink(shareUrl)}</div>
           </div>
           <div className="mt-4 flex items-center gap-3 rounded-2xl border border-black/10 p-3">
             {qr ? <img className="h-16 w-16 rounded-xl bg-white p-1" src={qr} alt="" /> : <QrCode />}
