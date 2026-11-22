@@ -1,4 +1,4 @@
-import { defaultInvitation, EventType, Invitation, palettes, smartCopy, templates } from "@/lib/invitation-data";
+import { defaultInvitation, EventType, Invitation, invitationOpenings, palettes, smartCopy, templates } from "@/lib/invitation-data";
 
 const MAX_TEXT = 180;
 const MAX_LONG_TEXT = 620;
@@ -33,7 +33,7 @@ export function normalizeInvitation(invitation: Invitation): Invitation {
     palette,
     names: cleanText(invitation.names, defaultInvitation.names, 86),
     story: typeof invitation.story === "string" ? invitation.story.trim().slice(0, 360) : undefined,
-    opening: invitation.opening === "envelope" || invitation.opening === "balloon" ? invitation.opening : "direct",
+    opening: invitation.opening && Object.hasOwn(invitationOpenings, invitation.opening) ? invitation.opening : "direct",
     date: safeDate(invitation.date),
     time: cleanText(invitation.time, defaultInvitation.time, 8),
     place: cleanText(invitation.place, defaultInvitation.place, 120),

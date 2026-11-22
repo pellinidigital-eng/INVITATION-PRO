@@ -53,6 +53,15 @@ export type TemplateId =
   | "orsetto-tra-le-nuvole"
   | "mongolfiera-rosa-celeste";
 
+export const invitationOpenings = {
+  direct: { label: "Diretta", action: "Apri l’invito" },
+  envelope: { label: "Busta con sigillo", action: "Apri l’invito" },
+  balloon: { label: "Palloncino", action: "Tocca il palloncino per aprire" },
+  gift: { label: "Pacco regalo", action: "Apri il regalo" },
+  curtain: { label: "Sipario", action: "Apri il sipario" },
+  postcard: { label: "Cartolina da girare", action: "Gira la cartolina" }
+} as const;
+
 export type Invitation = {
   id: string;
   slug: string;
@@ -64,7 +73,7 @@ export type Invitation = {
   place: string;
   description: string;
   story?: string;
-  opening?: "direct" | "envelope" | "balloon";
+  opening?: keyof typeof invitationOpenings;
   dressCode: string;
   whatsapp: string;
   palette: string;
