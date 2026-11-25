@@ -115,22 +115,32 @@ export function InvitationOpening({ invitation, compact = false, onOpen }: {
               </motion.div>
             </div>
           ) : (
-            <div className="relative mt-10 h-[150px] w-full max-w-[266px]" style={{ perspective: 760 }}>
-              <div className="absolute inset-0 rounded-lg border"
-                style={{ background: `linear-gradient(170deg, ${palette.ink}, ${palette.accent} 66%, ${palette.soft})`, borderColor: `${palette.accent}77`, boxShadow: "0 21px 36px #2d182e32, 0 3px 7px #2d182e30" }} />
-              <RevealLight active={opening} delay={0.38} />
-              <motion.div className="absolute inset-x-0 top-0 z-20 h-[86px] origin-top rounded-t-md"
-                style={{ background: `repeating-linear-gradient(135deg, #fff0 0 2px, #fff2 2px 3px), linear-gradient(145deg, ${palette.bg}, ${palette.soft} 66%, ${palette.accent2})`, clipPath: "polygon(0 0, 100% 0, 52% 100%, 48% 100%)" }}
-                animate={opening ? { rotateX: [0, 28, 171], zIndex: [20, 20, 0] } : undefined}
-                transition={{ delay: 0.45, duration: 0.85, times: [0, 0.4, 1], ease: "easeInOut" }} />
-              <motion.div className="absolute inset-x-5 top-4 z-10 h-28"
-                initial={{ opacity: 0, scale: 0.94 }} animate={opening ? { y: -122, opacity: 1, rotate: -2, scale: 1.04 } : undefined}
-                transition={{ delay: 1.07, duration: 1.06, ease: "easeOut" }}>
+            <div className="relative mt-8 h-[168px] w-full max-w-[266px]" style={{ perspective: 760 }}>
+              <div className="absolute inset-0 rounded-md border"
+                style={{ background: `linear-gradient(154deg, ${palette.ink}, ${palette.accent} 82%)`, borderColor: "#bfa06d", boxShadow: "0 22px 38px #2d182e38, 0 3px 10px #2d182e31" }} />
+              <RevealLight active={opening} delay={0.35} />
+              <motion.div className="absolute inset-x-6 top-5 z-10 h-32"
+                initial={{ opacity: 0, scale: 0.84 }}
+                animate={opening ? { y: -26, opacity: 1, scale: 1.06 } : undefined}
+                transition={{ delay: 0.86, duration: 1.15, ease: "easeOut" }}>
                 {paper}
               </motion.div>
-              <div className="pointer-events-none absolute inset-0 z-10 rounded-lg"
-                style={{ background: `linear-gradient(140deg, transparent 48%, ${palette.accent}23 49%, transparent 50%), linear-gradient(220deg, transparent 48%, ${palette.accent}23 49%, transparent 50%), linear-gradient(155deg, ${palette.bg}, ${palette.soft})`, clipPath: "polygon(0 0, 50% 55%, 100% 0, 100% 100%, 0 100%)" }} />
-              <motion.span className="absolute left-1/2 top-[82px] z-30 grid h-[58px] w-[58px] place-items-center text-[20px]"
+              {([-1, 1] as const).map((side) => (
+                <motion.div key={side} className={`absolute inset-y-0 z-20 w-1/2 border ${side === -1 ? "left-0 origin-left rounded-l-md" : "right-0 origin-right rounded-r-md"}`}
+                  style={{
+                    background: `repeating-linear-gradient(132deg, transparent 0 3px, #fff2 3px 4px), linear-gradient(155deg, ${palette.bg}, ${palette.soft})`,
+                    borderColor: "#ad9168", color: "#a78450", backfaceVisibility: "hidden",
+                    boxShadow: `inset 0 0 0 3px ${palette.bg}, inset 0 0 0 4px #c5aa7777`
+                  }}
+                  animate={opening ? { rotateY: side * 112 } : undefined}
+                  transition={{ delay: 0.55 + (side === 1 ? 0.09 : 0), duration: 1.18, ease: "easeInOut" }}>
+                  <div className={`absolute inset-y-3 border-y ${side === -1 ? "left-3 right-0 border-l" : "left-0 right-3 border-r"}`} style={{ borderColor: "#b99b69a6" }}>
+                    <span className={`absolute top-0 text-[18px] leading-none ${side === -1 ? "left-1" : "right-1"}`}>❧</span>
+                    <span className={`absolute bottom-0 rotate-180 text-[18px] leading-none ${side === -1 ? "left-1" : "right-1"}`}>❧</span>
+                  </div>
+                </motion.div>
+              ))}
+              <motion.span className="absolute left-1/2 top-1/2 z-30 grid h-[58px] w-[58px] place-items-center text-[20px]"
                 style={{ x: "-50%", y: "-50%", borderRadius: "47% 53% 51% 49% / 53% 47% 55% 45%", background: "radial-gradient(circle at 28% 18%, #d88a79 0%, #9e424e 28%, #742436 63%, #421427 100%)", boxShadow: "inset 2px 3px 4px #ffd4aa77, inset -3px -4px 5px #36101a, 1px 6px 10px #32132366", color: "#f7d69e" }}
                 animate={opening ? { opacity: [1, 1, 0], scale: [1, 1.08, 0.75], y: ["-50%", "-44%", "-8%"], rotate: [0, -7, 15] } : undefined}
                 transition={{ duration: 0.79, times: [0, 0.44, 1], ease: "easeInOut" }}>
