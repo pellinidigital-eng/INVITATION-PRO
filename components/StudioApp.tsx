@@ -547,13 +547,27 @@ export function StudioApp() {
               {!features.premiumAnimations && <span className="mt-1 block text-xs text-black/65">Le aperture animate sono disponibili in Premium.</span>}
             </label>
             {features.premiumAnimations && active.opening === "envelope" && (
-              <label className="mt-3 flex items-center justify-between gap-4 rounded-2xl border border-black/10 bg-white px-3 py-2 text-sm font-medium">
-                Colore della busta
-                <input type="color"
-                  value={active.envelopeColor && envelopeColorPattern.test(active.envelopeColor) ? active.envelopeColor : defaultEnvelopeColor}
-                  onChange={(event) => update({ envelopeColor: event.target.value })}
-                  className="h-11 w-16 cursor-pointer rounded-lg border border-black/10 bg-white p-1" />
-              </label>
+              <div className="mt-3 rounded-2xl border border-black/10 bg-white px-3 py-2 text-sm font-medium">
+                <label className="flex items-center justify-between gap-4">
+                  Colore della busta
+                  <input type="color"
+                    value={active.envelopeColor && envelopeColorPattern.test(active.envelopeColor) ? active.envelopeColor : defaultEnvelopeColor}
+                    onInput={(event) => update({ envelopeColor: event.currentTarget.value })}
+                    className="h-11 w-16 cursor-pointer rounded-lg border border-black/10 bg-white p-1" />
+                </label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {[
+                    ["Rosa cipria", defaultEnvelopeColor], ["Avorio", "#eee4ce"], ["Verde salvia", "#688477"],
+                    ["Blu polvere", "#7792a7"], ["Bordeaux", "#79394f"]
+                  ].map(([label, color]) => (
+                    <button key={color} type="button" aria-pressed={(active.envelopeColor ?? defaultEnvelopeColor) === color}
+                      onClick={() => update({ envelopeColor: color })}
+                      className="inline-flex min-h-10 items-center gap-2 rounded-full border border-black/10 px-3 text-xs aria-pressed:border-black">
+                      <span aria-hidden="true" className="h-4 w-4 rounded-full border border-black/10" style={{ background: color }} />{label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
             {(status.missing.length > 0 || status.pastDate) && (
               <div className="mt-4 flex gap-3 rounded-2xl border border-[#b35f42]/20 bg-[#fff4ef] p-4 text-sm leading-6 text-[#7a3926]">
