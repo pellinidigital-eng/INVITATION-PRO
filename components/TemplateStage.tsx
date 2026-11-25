@@ -81,7 +81,7 @@ export function TemplateStage({ invitation, compact = false, plan = "premium", s
           className={`mx-auto flex w-full ${templateStyle.frame} flex-col ${templateStyle.align}`}
           initial={reducedMotion ? false : { opacity: 0, y: 22, scale: 0.985 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.55, ease: "easeOut" }}
+          transition={{ duration: compact ? 0.55 : 0.9, ease: "easeInOut" }}
         >
           {artwork?.position === "top" && <div className="mb-4 w-full">{illustration}</div>}
           <div
