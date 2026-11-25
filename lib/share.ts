@@ -45,6 +45,7 @@ const shareKeys: (keyof Invitation)[] = [
   "description",
   "story",
   "opening",
+  "envelopeColor",
   "dressCode",
   "whatsapp",
   "palette",

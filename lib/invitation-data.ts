@@ -62,6 +62,9 @@ export const invitationOpenings = {
   postcard: { label: "Cartolina da girare", action: "Gira la cartolina" }
 } as const;
 
+export const defaultEnvelopeColor = "#d5a8a5";
+export const envelopeColorPattern = /^#[0-9a-f]{6}$/i;
+
 export type Invitation = {
   id: string;
   slug: string;
@@ -74,6 +77,7 @@ export type Invitation = {
   description: string;
   story?: string;
   opening?: keyof typeof invitationOpenings;
+  envelopeColor?: string;
   dressCode: string;
   whatsapp: string;
   palette: string;

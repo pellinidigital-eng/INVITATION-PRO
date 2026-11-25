@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import {
   defaultInvitation,
+  defaultEnvelopeColor,
+  envelopeColorPattern,
   demoInvitations,
   EventType,
   eventTypes,
@@ -544,6 +546,15 @@ export function StudioApp() {
               </select>
               {!features.premiumAnimations && <span className="mt-1 block text-xs text-black/65">Le aperture animate sono disponibili in Premium.</span>}
             </label>
+            {features.premiumAnimations && active.opening === "envelope" && (
+              <label className="mt-3 flex items-center justify-between gap-4 rounded-2xl border border-black/10 bg-white px-3 py-2 text-sm font-medium">
+                Colore della busta
+                <input type="color"
+                  value={active.envelopeColor && envelopeColorPattern.test(active.envelopeColor) ? active.envelopeColor : defaultEnvelopeColor}
+                  onChange={(event) => update({ envelopeColor: event.target.value })}
+                  className="h-11 w-16 cursor-pointer rounded-lg border border-black/10 bg-white p-1" />
+              </label>
+            )}
             {(status.missing.length > 0 || status.pastDate) && (
               <div className="mt-4 flex gap-3 rounded-2xl border border-[#b35f42]/20 bg-[#fff4ef] p-4 text-sm leading-6 text-[#7a3926]">
                 <AlertTriangle className="mt-1 shrink-0" size={17} />

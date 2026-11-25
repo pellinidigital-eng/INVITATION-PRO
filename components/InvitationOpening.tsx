@@ -3,9 +3,20 @@
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { RotateCw, Sparkles } from "lucide-react";
-import { Invitation, invitationOpenings, palettes } from "@/lib/invitation-data";
+import { defaultEnvelopeColor, envelopeColorPattern, Invitation, invitationOpenings, palettes } from "@/lib/invitation-data";
 
 import { getInvitationFont } from "@/lib/invitation-fonts";
+
+const envelopeFolds = [
+  { side: "left", origin: "left center", travel: { rotateY: -105, x: "-9%" }, shade: 105,
+    clip: "polygon(0 0, 12% 12%, 26% 29%, 52% 50%, 29% 70%, 12% 87%, 0 100%)", ornament: "left-[-19%] top-[37%] w-[76%] rotate-90" },
+  { side: "right", origin: "right center", travel: { rotateY: 105, x: "9%" }, shade: 240,
+    clip: "polygon(100% 0, 88% 12%, 74% 29%, 48% 50%, 71% 70%, 88% 87%, 100% 100%)", ornament: "right-[-19%] top-[37%] w-[76%] -rotate-90" },
+  { side: "bottom", origin: "center bottom", travel: { rotateX: -100, y: "10%" }, shade: 15,
+    clip: "polygon(0 100%, 100% 100%, 83% 80%, 66% 63%, 50% 48%, 34% 63%, 17% 80%)", ornament: "bottom-[4%] left-[12%] w-[76%] rotate-180" },
+  { side: "top", origin: "center top", travel: { rotateX: 105, y: "-8%" }, shade: 155,
+    clip: "polygon(0 0, 100% 0, 89% 15%, 82% 21%, 78% 29%, 70% 33%, 66% 40%, 56% 46%, 50% 52%, 44% 46%, 34% 40%, 30% 33%, 22% 29%, 18% 21%, 11% 15%)", ornament: "left-[12%] top-[3%] w-[76%]" }
+];
 
 export function InvitationOpening({ invitation, compact = false, onOpen }: {
   invitation: Invitation;
@@ -18,6 +29,9 @@ export function InvitationOpening({ invitation, compact = false, onOpen }: {
   const [opening, setOpening] = useState(false);
   const mode = invitation.opening ?? "direct";
   const balloon = mode === "balloon";
+  const envelope = mode === "envelope";
+  const envelopeColor = invitation.envelopeColor && envelopeColorPattern.test(invitation.envelopeColor)
+    ? invitation.envelopeColor : defaultEnvelopeColor;
   const duration = mode === "envelope" ? 2.9 : 2.65;
   const paper = (
     <div className="grid h-full w-full content-center justify-items-center gap-2 rounded-md border px-3 py-2 text-center"
@@ -38,7 +52,7 @@ export function InvitationOpening({ invitation, compact = false, onOpen }: {
       <button type="button" disabled={opening} onClick={() => reducedMotion ? onOpen() : setOpening(true)} className="group relative w-full max-w-xl rounded-[32px] px-2 py-8 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">
         <motion.div
           aria-hidden="true"
-          className="relative mx-auto mb-9 grid h-52 w-full max-w-[280px] place-items-center"
+          className={`relative mx-auto grid w-full place-items-center ${envelope ? "mb-6 h-[clamp(285px,53svh,420px)] max-w-[245px]" : "mb-9 h-52 max-w-[280px]"}`}
           variants={{
             idle: { opacity: 1 },
             reveal: { opacity: [1, 1, 1], scale: [1, 1, 1.018] }
@@ -115,28 +129,27 @@ export function InvitationOpening({ invitation, compact = false, onOpen }: {
               </motion.div>
             </div>
           ) : (
-            <div className="relative mt-8 h-[168px] w-full max-w-[266px]" style={{ perspective: 760 }}>
-              <div className="absolute inset-0 rounded-md border"
-                style={{ background: `linear-gradient(154deg, ${palette.ink}, ${palette.accent} 82%)`, borderColor: "#bfa06d", boxShadow: "0 22px 38px #2d182e38, 0 3px 10px #2d182e31" }} />
-              <RevealLight active={opening} delay={0.35} />
-              <motion.div className="absolute inset-x-6 top-5 z-10 h-32"
-                initial={{ opacity: 0, scale: 0.84 }}
-                animate={opening ? { y: -26, opacity: 1, scale: 1.06 } : undefined}
-                transition={{ delay: 0.86, duration: 1.15, ease: "easeOut" }}>
+            <div className="relative h-full w-full max-w-[230px]" data-envelope-color={envelopeColor} style={{ perspective: 900 }}>
+              <div className="absolute inset-0 rounded-xl"
+                style={{ background: `linear-gradient(155deg, #26192120, #26192177), ${envelopeColor}`, boxShadow: "0 20px 48px #25132240" }} />
+              <RevealLight active={opening} delay={0.45} />
+              <motion.div className="absolute inset-x-3 inset-y-4 z-10"
+                initial={{ opacity: 0, scale: 0.94 }}
+                animate={opening ? { y: -8, opacity: 1, scale: 1.04 } : undefined}
+                transition={{ delay: 0.87, duration: 1.1, ease: "easeOut" }}>
                 {paper}
               </motion.div>
-              {([-1, 1] as const).map((side) => (
-                <motion.div key={side} className={`absolute inset-y-0 z-20 w-1/2 border ${side === -1 ? "left-0 origin-left rounded-l-md" : "right-0 origin-right rounded-r-md"}`}
-                  style={{
-                    background: `repeating-linear-gradient(132deg, transparent 0 3px, #fff2 3px 4px), linear-gradient(155deg, ${palette.bg}, ${palette.soft})`,
-                    borderColor: "#ad9168", color: "#a78450", backfaceVisibility: "hidden",
-                    boxShadow: `inset 0 0 0 3px ${palette.bg}, inset 0 0 0 4px #c5aa7777`
-                  }}
-                  animate={opening ? { rotateY: side * 112 } : undefined}
-                  transition={{ delay: 0.55 + (side === 1 ? 0.09 : 0), duration: 1.18, ease: "easeInOut" }}>
-                  <div className={`absolute inset-y-3 border-y ${side === -1 ? "left-3 right-0 border-l" : "left-0 right-3 border-r"}`} style={{ borderColor: "#b99b69a6" }}>
-                    <span className={`absolute top-0 text-[18px] leading-none ${side === -1 ? "left-1" : "right-1"}`}>❧</span>
-                    <span className={`absolute bottom-0 rotate-180 text-[18px] leading-none ${side === -1 ? "left-1" : "right-1"}`}>❧</span>
+              {envelopeFolds.map((fold, index) => (
+                <motion.div key={fold.side} className={`pointer-events-none absolute inset-0 rounded-xl ${index === 3 ? "z-[23]" : "z-20"}`}
+                  style={{ transformOrigin: fold.origin, filter: "drop-shadow(0 3px 2px #3e253e65)" }}
+                  animate={opening ? { ...fold.travel, opacity: [1, 1, 0] } : undefined}
+                  transition={{ delay: 0.57 + (index === 3 ? 0 : index * 0.09 + 0.16), duration: 1.26, times: [0, 0.67, 1], ease: "easeInOut" }}>
+                  <div className="absolute inset-0 overflow-hidden rounded-xl" style={{
+                    clipPath: fold.clip,
+                    background: `repeating-linear-gradient(130deg, transparent 0 3px, #ffffff13 3px 4px), linear-gradient(${fold.shade}deg, #fff7 0%, #fff0 42%, #29102535 86%, #fff3 100%), ${envelopeColor}`
+                  }}>
+                    <img src="/openings/botanical-relief.webp" alt="" className={`pointer-events-none absolute opacity-80 mix-blend-luminosity ${fold.ornament}`}
+                      style={{ filter: "drop-shadow(0 1px 1px #2c151967)" }} />
                   </div>
                 </motion.div>
               ))}
