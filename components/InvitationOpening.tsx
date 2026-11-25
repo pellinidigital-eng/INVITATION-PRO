@@ -7,6 +7,19 @@ import { defaultEnvelopeColor, envelopeColorPattern, Invitation, invitationOpeni
 
 import { getInvitationFont } from "@/lib/invitation-fonts";
 
+const envelopeEventIntro: Record<Invitation["eventType"], string> = {
+  matrimonio: "Per il matrimonio di",
+  compleanno: "Per il compleanno di",
+  battesimo: "Per il battesimo di",
+  comunione: "Per la comunione di",
+  "baby-shower": "Per il baby shower di",
+  laurea: "Per la laurea di",
+  anniversario: "Per l’anniversario di",
+  business: "In occasione di"
+};
+
+const ceremonyDateFormat = new Intl.DateTimeFormat("it-IT", { dateStyle: "long", timeZone: "UTC" });
+
 const envelopeFolds = [
   { side: "left", origin: "left center", travel: { rotateY: -105, x: "-9%" }, shade: 105,
     clip: "polygon(0 0, 12% 12%, 26% 29%, 52% 50%, 29% 70%, 12% 87%, 0 100%)", ornament: "left-[-19%] top-[37%] w-[76%] rotate-90" },
@@ -32,7 +45,7 @@ export function InvitationOpening({ invitation, compact = false, onOpen }: {
   const envelope = mode === "envelope";
   const envelopeColor = invitation.envelopeColor && envelopeColorPattern.test(invitation.envelopeColor)
     ? invitation.envelopeColor : defaultEnvelopeColor;
-  const duration = mode === "envelope" ? 2.9 : 2.65;
+  const duration = envelope ? 7.4 : 2.65;
   const paper = (
     <div className="grid h-full w-full content-center justify-items-center gap-2 rounded-md border px-3 py-2 text-center"
       style={{ background: `repeating-linear-gradient(135deg, #fff0 0 3px, #fff2 3px 4px), ${palette.bg}`, color: palette.ink, borderColor: `${palette.accent}90`, boxShadow: `inset 0 0 0 4px ${palette.soft}, inset 0 0 0 5px ${palette.accent}44, 0 12px 28px #160d163b` }}>
@@ -130,14 +143,16 @@ export function InvitationOpening({ invitation, compact = false, onOpen }: {
             </div>
           ) : (
             <div className="relative h-full w-full max-w-[230px]" data-envelope-color={envelopeColor} style={{ perspective: 900 }}>
-              <div className="absolute inset-0 rounded-xl"
-                style={{ background: `linear-gradient(155deg, #26192120, #26192177), ${envelopeColor}`, boxShadow: "0 20px 48px #25132240" }} />
+              <motion.div className="absolute inset-0 rounded-xl"
+                style={{ background: `linear-gradient(155deg, #26192120, #26192177), ${envelopeColor}`, boxShadow: "0 20px 48px #25132240" }}
+                animate={opening ? { opacity: 0, y: 20 } : undefined}
+                transition={{ delay: 1.38, duration: 0.85, ease: "easeInOut" }} />
               <RevealLight active={opening} delay={0.45} />
               <motion.div className="absolute inset-x-3 inset-y-4 z-10"
-                initial={{ opacity: 0, scale: 0.94 }}
-                animate={opening ? { y: -8, opacity: 1, scale: 1.04 } : undefined}
-                transition={{ delay: 0.87, duration: 1.1, ease: "easeOut" }}>
-                {paper}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={opening ? { y: -8, opacity: 1, scale: 1.12 } : undefined}
+                transition={{ delay: 0.87, duration: 1.35, ease: "easeOut" }}>
+                {opening && <EnvelopeCard invitation={invitation} />}
               </motion.div>
               {envelopeFolds.map((fold, index) => (
                 <motion.div key={fold.side} className={`pointer-events-none absolute inset-0 rounded-xl ${index === 3 ? "z-[23]" : "z-20"}`}
@@ -162,12 +177,60 @@ export function InvitationOpening({ invitation, compact = false, onOpen }: {
             </div>
           )}
         </motion.div>
-        <span className="block break-words text-4xl leading-tight" style={{ fontFamily: font.family, fontWeight: font.weight }}>{invitation.names || "Il tuo evento"}</span>
-        <span className="mt-6 inline-flex min-h-11 items-center rounded-full border px-5 text-sm font-semibold group-hover:shadow-md" style={{ borderColor: palette.accent }}>
-          {invitationOpenings[mode].action}
-        </span>
+        <motion.span className="block" animate={envelope && opening ? { opacity: 0 } : undefined} transition={{ duration: 0.35 }}>
+          <span className="block break-words text-4xl leading-tight" style={{ fontFamily: font.family, fontWeight: font.weight }}>{invitation.names || "Il tuo evento"}</span>
+          <span className="mt-6 inline-flex min-h-11 items-center rounded-full border px-5 text-sm font-semibold group-hover:shadow-md" style={{ borderColor: palette.accent }}>
+            {invitationOpenings[mode].action}
+          </span>
+        </motion.span>
       </button>
     </motion.section>
+  );
+}
+
+function EnvelopeCard({ invitation }: { invitation: Invitation }) {
+  const palette = palettes[invitation.palette as keyof typeof palettes] ?? palettes.champagne;
+  const date = Date.parse(invitation.date);
+  const names = invitation.names.trim();
+  const couple = invitation.eventType === "matrimonio" && names.match(/^(.+)\s+&\s+(.+)$/);
+
+  return (
+    <div className="relative h-full overflow-hidden rounded-sm border bg-[#fffaf3] shadow-xl"
+      style={{ color: palette.ink, borderColor: `${palette.accent}70`, backgroundImage: "repeating-linear-gradient(125deg, #9b806707 0 1px, transparent 1px 4px)" }}>
+      <span className="absolute inset-2 rounded-sm border border-double" style={{ borderColor: `${palette.accent}80`, borderWidth: 3 }} />
+      {[false, true].map((bottom) => (
+        <img key={String(bottom)} src="/openings/botanical-relief.webp" alt=""
+          className={`absolute left-1/2 h-[21%] w-[69%] -translate-x-1/2 object-contain opacity-75 mix-blend-multiply ${bottom ? "bottom-1 rotate-180" : "top-1"}`} />
+      ))}
+      <motion.div className="absolute inset-x-4 inset-y-[20%] grid content-center gap-3"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: [0, 1, 1, 0], y: [8, 0, 0, -6] }}
+        transition={{ delay: 1.27, duration: 2.86, times: [0, 0.3, 0.83, 1], ease: "easeInOut" }}>
+        <span className="grid justify-items-center text-[clamp(2.5rem,11vw,3.5rem)] leading-[0.93]"
+          style={{ fontFamily: '"Great Vibes", cursive' }}>
+          <span>Save</span>
+          <span className="my-1 text-sm uppercase tracking-[0.18em]" style={{ fontFamily: '"Cormorant Garamond", serif' }}>the</span>
+          <span>Date</span>
+        </span>
+        {Number.isFinite(date) && (
+          <time dateTime={invitation.date} className="text-sm tracking-wide" style={{ fontFamily: '"Cormorant Garamond", serif' }}>{ceremonyDateFormat.format(date)}</time>
+        )}
+      </motion.div>
+      <motion.div className="absolute inset-x-4 inset-y-[20%] grid content-center gap-2"
+        initial={{ opacity: 0, y: 7 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 4.02, duration: 0.75, ease: "easeInOut" }}>
+        <span className="text-base italic leading-tight" style={{ fontFamily: '"Cormorant Garamond", serif' }}>
+          {names ? envelopeEventIntro[invitation.eventType] : envelopeEventIntro[invitation.eventType].replace(/ di$/, "")}
+        </span>
+        {names && (
+          <span className={`break-words leading-none ${names.length > 34 ? "text-[clamp(1.5rem,7vw,2.25rem)]" : "text-[clamp(2rem,9vw,3rem)]"}`}
+            style={{ fontFamily: '"Great Vibes", cursive' }}>
+            {couple ? <>{couple[1]}<span className="block text-2xl">&amp;</span>{couple[2]}</> : names}
+          </span>
+        )}
+      </motion.div>
+    </div>
   );
 }
 
