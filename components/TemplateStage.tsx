@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type React from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { CalendarPlus, Clock3, MapPin, MessageCircle, QrCode, Shirt, Sparkles } from "lucide-react";
 import { buildInviteCopy } from "@/lib/copy-engine";
 import { additionalTemplates, Invitation, palettes, planFeatures, ProductPlan, templates } from "@/lib/invitation-data";
@@ -28,6 +28,7 @@ const templateStyles = {
 } as const;
 
 export function TemplateStage({ invitation, compact = false, plan = "premium", showQr = false }: Props) {
+  const reducedMotion = useReducedMotion();
   const palette = palettes[invitation.palette as keyof typeof palettes] ?? palettes.champagne;
   const copy = buildInviteCopy(invitation);
   const template = templates.find((item) => item.id === invitation.template) ?? templates[0];
@@ -78,8 +79,8 @@ export function TemplateStage({ invitation, compact = false, plan = "premium", s
       <div className={`relative z-10 mx-auto flex ${compact ? "min-h-[620px] px-4 py-5" : "min-h-screen px-5 py-10 sm:px-8 sm:py-14"} ${templateStyle.align}`}>
         <motion.div
           className={`mx-auto flex w-full ${templateStyle.frame} flex-col ${templateStyle.align}`}
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={reducedMotion ? false : { opacity: 0, y: 22, scale: 0.985 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.55, ease: "easeOut" }}
         >
           {artwork?.position === "top" && <div className="mb-4 w-full">{illustration}</div>}
